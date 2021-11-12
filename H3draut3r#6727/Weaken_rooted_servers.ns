@@ -1,0 +1,29 @@
+// Simple Weakener-Script for rooted Servers. 
+
+// Initialise variables and define a few
+
+var Sec_lvl = 1.5;  // only change this one, th rest is needed in the script
+var done_weaken = [];
+
+
+// fetching servers in reach
+
+Servers = scan(getHostname());
+
+// yep, thats pretty done it, otherwiser change it with "home" or similiar.
+
+
+// check if server is rooted and Security-level above set value, move to second array if so ( don't mess up the arrays, bad memories in powershell <.< )
+Servers.forEach(
+    function (_) {
+        if (hasRootAccess(_) == true && getServerSecurityLevel(_) >= Sec_lvl) {
+            while(getServerSecurityLevel(_) >= Sec_lvl) {
+                tprintf("weakening" + _)
+                weaken(_);
+            }
+            done_weaken.push(_)
+        }
+    }
+
+);
+tprintf("Servers weakened:" + sprintf(done_weaken));
