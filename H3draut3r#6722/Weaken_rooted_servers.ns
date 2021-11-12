@@ -1,8 +1,7 @@
 // Simple Weakener-Script for rooted Servers. 
 
-// Initialise variables and define a few
+// Initialise variables
 
-var Sec_lvl = 1.5;  // only change this one, th rest is needed in the script
 var done_weaken = [];
 
 
@@ -16,9 +15,9 @@ Servers = scan(getHostname());
 // check if server is rooted and Security-level above set value, move to second array if so ( don't mess up the arrays, bad memories in powershell <.< )
 Servers.forEach(
     function (_) {
-        if (hasRootAccess(_) == true && getServerSecurityLevel(_) >= Sec_lvl) {
-            while(getServerSecurityLevel(_) >= Sec_lvl) {
-                tprintf("weakening" + _)
+        if (hasRootAccess(_) == true && getServerSecurityLevel(_) > getServerMinSecurityLevel(_)) {
+            while (getServerSecurityLevel(_) > getServerMinSecurityLevel(_)) {
+                tprintf("weakening: " + _)
                 weaken(_);
             }
             done_weaken.push(_)
