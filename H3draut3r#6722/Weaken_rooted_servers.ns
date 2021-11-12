@@ -26,4 +26,4 @@ Servers.forEach(
     }
 
 );
-tprintf("Servers weakened:" + sprintf(done_weaken));
+tprintf("Servers weakened:" + done_weaken);
