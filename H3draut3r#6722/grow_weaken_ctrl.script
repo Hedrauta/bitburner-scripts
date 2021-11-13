@@ -1,0 +1,6 @@
+// initialise Variables
+var server_weakened = []; // to use in script
+var server_growth = []; // same
+var grow_min = 30; // minimum grow for weakening
+var grow_max = 90; // maximum grow for growing
+
