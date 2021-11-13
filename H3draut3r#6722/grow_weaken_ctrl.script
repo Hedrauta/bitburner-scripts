@@ -1,6 +1,36 @@
 // initialise Variables
-var server_weakened = []; // to use in script
-var server_growth = []; // same
+var weaken_ram = 2.2; // size of weaken-script
+var grow_ram = 2.2; // size of grow-script
 var grow_min = 30; // minimum grow for weakening
 var grow_max = 90; // maximum grow for growing
+var grow_multi = 3 // multiplicator for money on server 
+var script_server1 = "1024G_1"; // server on which weaken/grow will run
+var script_server2 = "1024G_2"; // 2 servers are better than 1
 
+// variables to use in script
+var server_weakened = []; 
+var server_growth = []; 
+var threads = 1;  // just for initialise
+const allServers = getAllServers(); 
+const targetServers = [];
+const myServers = getPurchasedServers();
+
+
+// initialise servers from home (thanks to Pwnzerfaust)
+
+for (const server of allServers) {
+  if (!myServers.includes(server) && server != "home") {
+    targetServers.push(server);
+  }
+}
+// Script-part (Loop)
+while (1) { // loop forever!
+    myServers.forEach(
+        function (_) {
+            if (hasRootAccess(_)){
+                if (getServerGrowth(_) < grow_min) {
+                    exec()
+                }
+        }
+    )
+}
