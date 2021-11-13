@@ -1,0 +1,18 @@
+var done_hack = [];
+// fetching servers in reach of "home"
+
+Servers = scan("home"); // change on purpose
+
+// best to do in multithreading ( -t n )
+Servers.forEach(
+    function (_) {
+        if (hasRootAccess(_) == true && getServerMoneyAvailable(_) > 1) {
+            tprintf("Hacking: " + _);
+            while (getServerMoneyAvailable(_) > 1) {
+                hack(_);
+            }
+            done_hack.push(_)
+        }
+    }
+);
+tprintf("Servers dried out:" + done_weaken);
