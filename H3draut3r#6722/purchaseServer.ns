@@ -1,7 +1,7 @@
 export async function main(ns) {
     if (ns.args[0] != null) {
         if (ns.args[1] != null && Number.isInteger(ns.args[1]) && ns.args[1]%2==0) {
-            ns.purchaseServer(args[0],args[1]);
+            ns.purchaseServer(ns.args[0], ns.args[1]);
             ns.tprint("Purchased a new Server. Hostname: "+ns.args[0]+" and "+ns.args[1]+"GB RAM")
         }
         else {
