@@ -1,36 +1,54 @@
 // initialise Variables
-var weaken_ram = 2.2; // size of weaken-script
-var grow_ram = 2.2; // size of grow-script
-var grow_min = 30; // minimum grow for weakening
-var grow_max = 90; // maximum grow for growing
-var grow_multi = 3 // multiplicator for money on server 
-var script_server1 = "1024G_1"; // server on which weaken/grow will run
-var script_server2 = "1024G_2"; // 2 servers are better than 1
+
+const grow_min = 30; // minimum grow for weakening
+const grow_max = 90; // maximum grow for growing
+const grow_multi = 2 // multiplicator for money on server 
+const script_servers = ["1024G_1", "1024G_2"]; // server on which weaken/grow will run
 
 // variables to use in script
-var server_weakened = []; 
-var server_growth = []; 
-var threads = 1;  // just for initialise
+const server_weakened = []; 
+const server_growth = []; 
+const threads = 1;  // just for initialise
 const allServers = getAllServers(); 
 const targetServers = [];
 const myServers = getPurchasedServers();
 
 
-// initialise servers from home (thanks to Pwnzerfaust)
+// initialise servers which are not owned or "home" (thanks to Pwnzerfaust)
 
 for (const server of allServers) {
   if (!myServers.includes(server) && server != "home") {
     targetServers.push(server);
   }
 }
+
+// copy grow/weaken-scripts on the working servers
+wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script");
+wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script");
+
+for (const own_srv of script_servers) {
+  scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], gethostname(), own_srv);
+}
+// done copy ≡(▔﹏▔)≡
+
+
 // Script-part (Loop)
 while (1) { // loop forever!
     myServers.forEach(
         function (_) {
             if (hasRootAccess(_)){
                 if (getServerGrowth(_) < grow_min) {
-                    exec()
+                  const grow_threads = grow_analyze(_);
+                  const ram = getServerRam(_);
+                  const pos_threads = math.floor((ram[0] - ram[1]) / 1.75);
+                  const needed_servers = math.ceil(grow_threads / pos_threads );
+                  if (needed_servers == 1){
+                    for (const script_run in script_servers) {
+                      // brain haz dumb, done for today
+                    }
+                  }
                 }
+            }
         }
     )
 }
