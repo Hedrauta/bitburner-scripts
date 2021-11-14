@@ -1,0 +1,70 @@
+export async function main(ns) {// initialise Variables
+
+const grow_min = 30; // minimum grow perc 
+const grow_max = 90; // maximum grow perc
+const grow_multi = 2 // multiplicator for money on server 
+
+const script_size = 1.75;
+const script_servers = { 
+  srv1 = {
+    name = "1024G_1",
+    max_ram =ns.getServerRam(script_servers.srv1.name),  //Size in GB
+    pos_threads = Math.floor(script_servers.srv1.max_ram / script_size),
+    active_threads = 0, // init
+    free_threads = 0, // init
+    process_list = ns.ps(script_servers.srv1.name)
+  }, 
+  srv2 = {
+    name = "1024G_2",
+    max_ram = ns.getServerRam(script_servers.srv1.name),
+    pos_threads = Math.floor(script_servers.srv2.max_ram / script_size),
+    active_threads = 0, // init
+    free_threads = 0, // init
+    process_list = ns.ps(script_servers.srv2.name)
+  }
+};
+// copy grow/weaken-scripts on the working servers
+ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script");
+ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script");
+for (var srv in script_servers)
+    ns.scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], ns.gethostname(), srv.name);
+}
+// done copy ≡(▔﹏▔)≡
+
+// variables to use in script
+const threads = 1;  // just for initialise
+
+// initialise servers which are not owned or "home" (credits to Pwnzerfaust)
+const allServers = ns.getAllServers(); 
+const targetServers = [];
+const myServers = ns.getPurchasedServers();
+
+for (const server of allServers) {
+  if (!myServers.includes(server) && server != "home") {
+    targetServers.push(server);
+  }
+}
+
+function update_servers () {
+    for (var srv in script_servers) {
+        srv.active_threads = 0;
+        srv.process_list = ns.ps(srv.name) 
+        for (i=0; i < (srv.process_list.length - 1); i++) {
+            srv.active_threads += srv.process_list[i].threads
+      }
+    }
+}
+
+// Script-part (Loop)
+while (1) { // loop forever!
+    myServers.forEach(
+        function (_) {
+            if (hasRootAccess(_)){
+                if (getServerGrowth(_) < grow_min) {
+                  
+                  
+                }
+            }
+        }
+    )
+}
