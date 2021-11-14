@@ -1,20 +1,45 @@
 // initialise Variables
 
-const grow_min = 30; // minimum grow for weakening
-const grow_max = 90; // maximum grow for growing
+const grow_min = 30; // minimum grow perc 
+const grow_max = 90; // maximum grow perc
 const grow_multi = 2 // multiplicator for money on server 
-const script_servers = ["1024G_1", "1024G_2"]; // server on which weaken/grow will run
+
+const script_size = 1.75;
+const script_servers = { 
+  srv1 = {
+    name = "1024G_1",
+    max_ram = getServerRam(script_servers.srv1.name),  //Size in GB
+    pos_threads = Math.floor(script_servers.srv1.max_ram / script_size),
+    active_threads = 0, // init
+    free_threads = 0, // init
+    
+    process_list = ps(script_servers.srv1.name)
+  }, 
+  srv2 = {
+    name = "1024G_2",
+    max_ram = getServerRam(script_servers.srv1.name),
+    pos_threads = Math.floor(script_servers.srv2.max_ram / script_size),
+    active_threads = 0, // init
+    free_threads = 0, // init
+    process_list = ps(script_servers.srv2.name)
+  }
+};
+// copy grow/weaken-scripts on the working servers
+wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script");
+wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script");
+
+  scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], gethostname(), script_servers.srv1.name);
+  scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], gethostname(), script_servers.srv2.name);
+
+// done copy ≡(▔﹏▔)≡
 
 // variables to use in script
-const server_weakened = []; 
-const server_growth = []; 
 const threads = 1;  // just for initialise
+
+// initialise servers which are not owned or "home" (credits to Pwnzerfaust)
 const allServers = getAllServers(); 
 const targetServers = [];
 const myServers = getPurchasedServers();
-
-
-// initialise servers which are not owned or "home" (thanks to Pwnzerfaust)
 
 for (const server of allServers) {
   if (!myServers.includes(server) && server != "home") {
@@ -22,15 +47,15 @@ for (const server of allServers) {
   }
 }
 
-// copy grow/weaken-scripts on the working servers
-wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script");
-wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script");
-
-for (const own_srv of script_servers) {
-  scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], gethostname(), own_srv);
+function update_servers () {
+    script_servers.srv1.process_list = ps(script_servers.srv1.name);
+    script_servers.srv2.process_list = ps(script_servers.srv2.name);
+    script_servers.srv1.active_threads = 0;
+    script_servers.srv2.active_threads = 0;
+    for (var srv in script_servers) {
+      script_servers.srv.process_list = ns.ps(script_servers.srv.name) 
+    }
 }
-// done copy ≡(▔﹏▔)≡
-
 
 // Script-part (Loop)
 while (1) { // loop forever!
@@ -38,10 +63,6 @@ while (1) { // loop forever!
         function (_) {
             if (hasRootAccess(_)){
                 if (getServerGrowth(_) < grow_min) {
-                  const grow_threads = grow_analyze(_);
-                  const ram = getServerRam(_);
-                  const pos_threads = math.floor((ram[0] - ram[1]) / 1.75);
-                  const needed_servers = math.ceil(grow_threads / pos_threads );
                   if (needed_servers == 1){
                     for (const script_run in script_servers) {
                       // brain haz dumb, done for today
