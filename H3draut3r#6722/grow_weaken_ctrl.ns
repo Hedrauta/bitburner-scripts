@@ -1,9 +1,9 @@
 /** @param {NS} ns **/
 export async function main(ns) {
 
-  const grow_min = 30; // minimum grow perc 
-  const grow_max = 90; // maximum grow perc
-  const grow_multi = 2 // multiplicator for money on server 
+  // const grow_min = 30; // minimum grow perc 
+  // const grow_max = 90; // maximum grow perc
+  // const grow_multi = 2 // multiplicator for money on server 
   
   const script_size = 1.75;
   const script_servers = { 
@@ -50,42 +50,35 @@ export async function main(ns) {
     }
   }
   const allServers = [];
-  async function dpthscan (dpentry, dptarget){
-    dptarget.push(await ns.scan(dpentry))
-  };
-  async function dpthfilter (dpfentry, dpflist) {
-    if (!dpflist.includes(dpfentry) && dpfentry != "home"){
-      return dpfentry
-    }
-  }
 
+const dpthscan = dpentry => await ns.scan(dpentry);
+const dpth1filter = dp1fentry => {if(!D0Servers.includes(dp1fentry) && dp1fentry != "home"){ dp1fentry }};
+const dpth2filter = dp2fentry => {if(!D1Servers.includes(dp2fentry) && dp2fentry != "home"){ dp2fentry }};
   // now do depth-scanning until level 2
-  const D1Srvs_list = []; // unfiltered list of Depth 1 servers
   const D1Servers = []; // filtered list of Depth 1 Servers
   const D2Servers = [];
-  const D2Srvs_list = [];
   
-  D0Servers.forEach(d0srvr => dpthscan(d0srvr, D1Srvs_list));
-  D1Servers.push(D1Srvs_list.forEach(d1srvs => dpthfilter(d1srvs, D0Servers)));
-  D1Servers.forEach(d1srvr => dpthscan(d1srvr, D2Srvs_list));
-  D2Servers.push(D2Srvs_list.forEach(d2srvs => dpthfilter(d2srvs, D1Servers)));
+  const D1Srvs_list = D0Servers.forEach(dpthscan));
+  D1Servers.push(D1Srvs_list.forEach(dpth1filter));
+  const D2Srvs_list = D1Servers.forEach(dpthscan);
+  D2Servers.push(D2Srvs_list.forEach(dpth2filter));
 // Save new servers to allservers
-  allServers.push(D0Servers);
-  allServers.push(D1Servers);
-  allServers.push(D2Servers);
+  allServers.push(D0Servers); // perfect
+  allServers.push(D1Servers); // null?
+  allServers.push(D2Servers); // again null -.-
 // End Depth-scan, ( maybe i should create a database for this...)
 
 
   async function update_servers() {
       for (var srv of script_servers) {
           srv.active_threads = 0;
-          srv.process_list = await ns.ps(srv.name) 
+          srv.process_list = ns.ps(srv.name) 
           for (var i=0; i < (srv.process_list.length - 1); i++) {
               srv.active_threads += srv.process_list[i].threads
           }
       }
   }
-
+update_servers;
   // Script-part (actual testing)
-  ns.tprint(allServers)
+  ns.tprint(allServers) 
   }
