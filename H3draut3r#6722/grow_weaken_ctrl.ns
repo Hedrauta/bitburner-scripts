@@ -1,63 +1,91 @@
 /** @param {NS} ns **/
 export async function main(ns) {
 
-    const grow_min = 30; // minimum grow perc 
-    const grow_max = 90; // maximum grow perc
-    const grow_multi = 2 // multiplicator for money on server 
-    
-    const script_size = 1.75;
-    const script_servers = { 
-      srv1: {
-        name: "1024G_1",
-        active_threads: 0, // init
-        free_threads: 0, // init
-        process_list: {}
-      }, 
-      srv2: {
-        name: "1024G_2",
-        active_threads: 0, // init
-        free_threads: 0, // init
-        process_list: {}
-      }
-    };
-    // update ram & pos_threads
-    for ( var srv of script_servers) {
-      srv.max_ram = ns.getServerMaxRam(srv.name)
-      srv.pos_threads = Math.floor(srv.max_ram / script_size)
+  const grow_min = 30; // minimum grow perc 
+  const grow_max = 90; // maximum grow perc
+  const grow_multi = 2 // multiplicator for money on server 
+  
+  const script_size = 1.75;
+  const script_servers = { 
+    srv1: {
+      name: "1024G_1",
+      active_threads: 0, // init
+      free_threads: 0, // init
+      process_list: {}
+    }, 
+    srv2: {
+      name: "1024G_2",
+      active_threads: 0, // init
+      free_threads: 0, // init
+      process_list: {}
     }
-    // copy grow/weaken-scripts on the working servers
-    // await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script", ns.gethostname);
-    // await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script", ns.gethostname);
-    // for (var srv of script_servers) {
-    //    ns.scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], ns.gethostname(), srv.name);
-    // }
-    // done copy ≡(▔﹏▔)≡
-    
-    // variables to use in script
-    // const threads = 1;  // just for initialise
-    
-    // initialise servers which are not owned or "home" (credits to Pwnzerfaust)
-    const allServers = await ns.getAllServers(); 
-    const targetServers = [];
-    const myServers = await ns.getPurchasedServers();
-    
-    for (const server of allServers) {
-      if (!myServers.includes(server) && server != "home") {
-        targetServers.push(server);
-      }
+  };
+  // update ram & pos_threads
+  for ( var srv_key in script_servers) {
+    const srv = script_servers[srv_key]
+    srv.max_ram = ns.getServerMaxRam(srv.name)
+    srv.pos_threads = Math.floor(srv.max_ram / script_size)
+  }
+
+  // copy grow/weaken-scripts on the working servers
+  // await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script", ns.gethostname);
+  // await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script", ns.gethostname);
+  // for (var srv of script_servers) {
+  //    ns.scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], ns.gethostname(), srv.name);
+  // }
+  // done copy ≡(▔﹏▔)≡
+  
+  // variables to use in script
+  // const threads = 1;  // just for initialise
+  
+  // initialise servers which are not owned or "home" (credits to Pwnzerfaust)
+  
+  // start fetching all server in range of home filter for owned ones, and do depth-scanning afterwards
+  const homeServers = await ns.scan("home"); // await ns.getAllServers(); 
+  const D0Servers = [];
+  const myServers = await ns.getPurchasedServers();
+      for (const d0srvs of homeServers) {
+    if (!myServers.includes(d0srvs) && d0srvs != "home") {
+      D0Servers.push(d0srvs);
     }
-    
-    function update_servers () {
-        for (var srv of script_servers) {
-            srv.active_threads = 0;
-            srv.process_list = await ns.ps(srv.name) 
-            for (i=0; i < (srv.process_list.length - 1); i++) {
-                srv.active_threads += srv.process_list[i].threads
+  }
+  const allServers = [];
+  async function dpthscan (dpentry, dptarget){
+    dptarget.push(await ns.scan(dpentry))
+  };
+  async function dpthfilter (dpfentry, dpflist) {
+    if (!dpflist.includes(dpfentry) && dpfentry != "home"){
+      return dpfentry
+    }
+  }
+
+  // now do depth-scanning until level 2
+  const D1Srvs_list = []; // unfiltered list of Depth 1 servers
+  const D1Servers = []; // filtered list of Depth 1 Servers
+  const D2Servers = [];
+  const D2Srvs_list = [];
+  
+  D0Servers.forEach(d0srvr => dpthscan(d0srvr, D1Srvs_list));
+  D1Servers.push(D1Srvs_list.forEach(d1srvs => dpthfilter(d1srvs, D0Servers)));
+  D1Servers.forEach(d1srvr => dpthscan(d1srvr, D2Srvs_list));
+  D2Servers.push(D2Srvs_list.forEach(d2srvs => dpthfilter(d2srvs, D1Servers)));
+// Save new servers to allservers
+  allServers.push(D0Servers);
+  allServers.push(D1Servers);
+  allServers.push(D2Servers);
+// End Depth-scan, ( maybe i should create a database for this...)
+
+
+  async function update_servers() {
+      for (var srv of script_servers) {
+          srv.active_threads = 0;
+          srv.process_list = await ns.ps(srv.name) 
+          for (var i=0; i < (srv.process_list.length - 1); i++) {
+              srv.active_threads += srv.process_list[i].threads
           }
-        }
-    }
-    
-    // Script-part (actual testing)
-    update_servers();
-    ns.tprint(script_servers)
-    }
+      }
+  }
+
+  // Script-part (actual testing)
+  ns.tprint(allServers)
+  }
