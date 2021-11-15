@@ -51,22 +51,25 @@ export async function main(ns) {
   }
   const allServers = [];
 
+  // depth-commands
 const dpthscan = dpentry => await ns.scan(dpentry);
 const dpth1filter = dp1fentry => {if(!D0Servers.includes(dp1fentry) && dp1fentry != "home"){ dp1fentry }};
 const dpth2filter = dp2fentry => {if(!D1Servers.includes(dp2fentry) && dp2fentry != "home"){ dp2fentry }};
-  // now do depth-scanning until level 2
   const D1Servers = []; // filtered list of Depth 1 Servers
   const D2Servers = [];
   
-  const D1Srvs_list = D0Servers.forEach(dpthscan));
+// do scan and filter
+  const D1Srvs_list = D0Servers.forEach(dpthscan);
   D1Servers.push(D1Srvs_list.forEach(dpth1filter));
   const D2Srvs_list = D1Servers.forEach(dpthscan);
   D2Servers.push(D2Srvs_list.forEach(dpth2filter));
-// Save new servers to allservers
+// expect awesome results and save new servers to allservers
   allServers.push(D0Servers); // perfect
   allServers.push(D1Servers); // null?
   allServers.push(D2Servers); // again null -.-
-// End Depth-scan, ( maybe i should create a database for this...)
+// End Depth-scan, ( i'm gonna create a database for that.... i'm going nuts on this )
+// Todo: Rage, Remove Depth-scanning, create a database for each city, get happy !
+
 
 
   async function update_servers() {
