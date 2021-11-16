@@ -38,38 +38,20 @@ export async function main(ns) {
   // variables to use in script
   // const threads = 1;  // just for initialise
   
-  // initialise servers which are not owned or "home" (credits to Pwnzerfaust)
+  // initialise servers which are not owned or "home" (credits to Pwnzerfaust, Azirale & Kozd)
   
   // start fetching all server in range of home filter for owned ones, and do depth-scanning afterwards
-  const homeServers = await ns.scan("home"); // await ns.getAllServers(); 
-  const D0Servers = [];
-  const myServers = await ns.getPurchasedServers();
-      for (const d0srvs of homeServers) {
-    if (!myServers.includes(d0srvs) && d0srvs != "home") {
-      D0Servers.push(d0srvs);
-    }
-  }
-  const allServers = [];
-
-  // depth-commands
-const dpthscan = dpentry => await ns.scan(dpentry);
-const dpth1filter = dp1fentry => {if(!D0Servers.includes(dp1fentry) && dp1fentry != "home"){ dp1fentry }};
-const dpth2filter = dp2fentry => {if(!D1Servers.includes(dp2fentry) && dp2fentry != "home"){ dp2fentry }};
-  const D1Servers = []; // filtered list of Depth 1 Servers
-  const D2Servers = [];
+  const homeServers = ns.scan("home");
+  const myServers = ns.getPurchasedServers();
+  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf)&&hmuf!="home");
+  const targetServer = D0Servers; // list of "targetable" Servers
+  const D1Servers = D0Servers.flatMap(d1uf => ns.scan(d1uf))
+      .filter(d1f => !targetServer.includes(d1f)&&d1f!="home");
+  D1Servers.map(d1fs => targetServer.push(d1fs));
+  const D2Servers = D1Servers.flatMap(d2uf => ns.scan(d2uf))
+      .filter(d2f => !targetServer.includes(d2f)&&d2f!="home");
+  D2Servers.map(d2fs => targetServer.push(d2fs));
   
-// do scan and filter
-  const D1Srvs_list = D0Servers.forEach(dpthscan);
-  D1Servers.push(D1Srvs_list.forEach(dpth1filter));
-  const D2Srvs_list = D1Servers.forEach(dpthscan);
-  D2Servers.push(D2Srvs_list.forEach(dpth2filter));
-// expect awesome results and save new servers to allservers
-  allServers.push(D0Servers); // perfect
-  allServers.push(D1Servers); // null?
-  allServers.push(D2Servers); // again null -.-
-// End Depth-scan, ( i'm gonna create a database for that.... i'm going nuts on this )
-// Todo: Rage, Remove Depth-scanning, create a database for each city, get happy !
-
 
 
   async function update_servers() {
@@ -83,5 +65,5 @@ const dpth2filter = dp2fentry => {if(!D1Servers.includes(dp2fentry) && dp2fentry
   }
 update_servers;
   // Script-part (actual testing)
-  ns.tprint(allServers) 
+  ns.tprint(targetServer)
   }
