@@ -1,84 +1,153 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-
-  // const grow_min = 30; // minimum grow perc 
-  // const grow_max = 90; // maximum grow perc
-  // const grow_multi = 2 // multiplicator for money on server 
-  
-  const script_size = 1.75;
-  const script_servers = { 
+  const script_servers = {
     srv1: {
       name: "32TB_1",
       active_threads: 0, // init
       free_threads: 0, // init
       process_list: {}
-    }, 
+    },
     srv2: {
       name: "32TB_2",
       active_threads: 0, // init
       free_threads: 0, // init
       process_list: {}
-    }, 
+    },
     srv3: {
       name: "32TB_3",
       active_threads: 0, // init
       free_threads: 0, // init
       process_list: {}
-    }, 
+    },
     srv4: {
       name: "32TB_4",
       active_threads: 0, // init
       free_threads: 0, // init
       process_list: {}
     }
-  };
-  // update ram & pos_threads
-  for ( var srv_key in script_servers) {
-    const srv = script_servers[srv_key]
-    srv.max_ram = ns.getServerMaxRam(srv.name)
-    srv.pos_threads = Math.floor(srv.max_ram / script_size)
   }
+  // update ram & pos_threads
+  const script_size = 1.75;
+  for (var srv_key in script_servers) {
+    const ramsrv = script_servers[srv_key];
+    ramsrv.max_ram = ns.getServerMaxRam(ramsrv.name);
+    ramsrv.pos_threads = Math.floor(ramsrv.max_ram / script_size)
+  };
 
   // copy grow/weaken-scripts on the working servers
-   await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script", ns.gethostname);
-   await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script", ns.gethostname);
-  for (var srv of script_servers) {
-    ns.scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], ns.gethostname(), srv.name);
-    }
+  await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script", ns.gethostname);
+  await ns.wget("https://github.com/Hedrauta/bitburner-scripts/raw/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "ctrl/weaken_server.script", ns.gethostname);
+  for (var copy_key in script_servers) {
+    const srvscp = script_servers[copy_key];
+    await ns.scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], ns.getHostname(), srvscp.name)
+  }
   // done copy ≡(▔﹏▔)≡
-  
-  
+
+
   // initialise servers which are not owned or "home" (credits to Pwnzerfaust, Azirale & Kozd)
-  
+
   // start fetching all server in range of home filter for owned ones, and do depth-scanning
   const homeServers = ns.scan("home");
   const myServers = ns.getPurchasedServers();
-  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf)&&hmuf!="home");
+  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != "home");
   const targetServer = D0Servers; // list of "targetable" Servers
   const D1Servers = D0Servers.flatMap(d1uf => ns.scan(d1uf))
-      .filter(d1f => !targetServer.includes(d1f)&&d1f!="home");
+    .filter(d1f => !targetServer.includes(d1f) && d1f != "home");
   D1Servers.map(d1fs => targetServer.push(d1fs));
   const D2Servers = D1Servers.flatMap(d2uf => ns.scan(d2uf))
-      .filter(d2f => !targetServer.includes(d2f)&&d2f!="home");
+    .filter(d2f => !targetServer.includes(d2f) && d2f != "home");
   D2Servers.map(d2fs => targetServer.push(d2fs));
-  
 
-  
+
+
   async function update_servers() {
-      for (var srv of script_servers) {
-          srv.active_threads = 0;
-          srv.process_list = ns.ps(srv.name) 
-          for (var i=0; i < (srv.process_list.length - 1); i++) {
-              srv.active_threads += srv.process_list[i].threads
-          }
+    for (var srv of script_servers) {
+      srv.active_threads = 0;
+      srv.process_list = ns.ps(srv.name)
+      for (var i = 0; i < (srv.process_list.length - 1); i++) {
+        srv.active_threads += srv.process_list[i].threads
       }
-  }
-// variables to use in script
-const threads = 1;  // just for initialise
+    }
+  };
 
-update_servers;
+  update_servers();
+  ns.tprint(script_servers);
+  ns.tprint(targetServer);
   // Script-part (in loop)
-  while(1){
-    // homerwork!!! 
+  while (1) {
+    targetServer.map(tserv => {
+      const cur_mon = ns.getServerMoneyAvailable(tserv);
+      const max_mon = ns.getServerMaxMoney(tserv);
+      const g_multi = Math.ceil(max_mon / cur_mon);
+      if (cur_mon <= (max_mon * 0.99)) { // grow with enough threads for MaxMoney on the Server
+        for (const psath of script_servers) {
+          const act_gthreads = 0;
+          act_gthreads += psath.process_list.threads.filter(psath.process_list.args.includes(tserv) && psath.process_list.filename.includes("/ctrl/grow_server.script"))
+        }
+        const g_threads = Math.ceil(ns.growthAnalyze(tserv, g_multi)) - act_gthreads;
+        g_threads -= act_gthreads;
+        for (i = 0; i == 1; null) {
+          for (const ssrv_key in script_servers) {
+            const ssrv = script_servers[ssrv_key];
+            if (g_threads > 0 && ssrv.process_list.some(gropro => gropro.filename.includes("/ctrl/grow_server.ctrl") && gropro.args.includes(tserv))) {
+              if (ssrv.free_threads > g_threads) {
+                ns.exec("/ctrl/grow_server.script", ssrv, g_threads, tserv);
+                g_threads = 0;
+                update_servers;
+                i = 1
+              }
+              else if (ssrv.free_threads > 1 && ssrv.free_threads < g_threads) {
+                ns.exec("/ctrl//ctrl/grow_server.scipt", ssrv, ssrv.free_threads, tserv);
+                g_threads -= ssrv.free_threads;
+                update_servers()
+              }
+              else {
+                if (g_threads = 0) { i = 1 } // exit because there are enough grow running
+                else { ns.tprint("GWCTRL: How?") }
+              }
+            }
+            else {
+              ns.tprint("GWCTRL: No free Servers to grow " + tserv + " . Waiting 5 secs");
+              await ns.sleep(5000)
+            }
+          }
+        }
+      }
+      else { // server reached 99% of MaxMoney else weaken with enough threads for HackCTRL
+        for (const psath of script_servers) {
+          const act_wthreads = 0;
+          act_wthreads += psath.process_list.threads.filter(psath.process_list.args.includes(tserv) && psath.process_list.filename.includes("weaken_server.script"))
+        }
+        const wthreads = Math.ceil((ns.getServerSecurityLevel(host) - getServerMinSecurityLevel(host)) / 0.05);
+        wthreads -= act_wthreads
+        for (i = 0; i == 1; null) {
+          for (const ssrv_key in script_servers) {
+            const ssrv = script_servers[ssrv_key];
+            if (wthreads > 0 && !ssrv.process_list.some(weapro => weapro.filename.includes("/ctrl/weaken_server.ctrl") && weapro.args.includes(tserv))) {
+              if (ssrv.free_threads > g_threads) {
+                ns.exec("weaken_server.script", ssrv, g_threads, tserv);
+                wthreads = 0;
+                update_servers();
+                i = 1
+              }
+              else if (ssrv.free_threads > 1 && ssrv.free_threads < g_threads) {
+                ns.exec("weaken_server.scipt", ssrv, ssrv.free_threads, tserv);
+                wthreads -= ssrv.free_threads;
+                update_servers()
+              }
+              else {
+                if (g_threads = 0) { i = 1 } // exit because there are enough grow running
+                else { ns.tprint("GWCTRL: Again?") }
+              }
+            }
+            else {
+              ns.tprint("GWCTRL: No free threads to weaken " + tserv + " . Waiting 5 secs");
+              await ns.sleep(5000)
+            }
+          }
+        }
+      }
+    });
+    ns.sleep(10000)
   }
-  }
+}
