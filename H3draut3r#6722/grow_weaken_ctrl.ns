@@ -2,28 +2,16 @@
 export async function main(ns) {
   const script_servers = [
     {
-      name: "32TB_1",
-      active_threads: 0, // init
-      free_threads: 0, // init
-      process_list: []
+      name: "32TiB_1",
+      free_threads: 0 // init
     },
     {
-      name: "32TB_2",
-      active_threads: 0, // init
-      free_threads: 0, // init
-      process_list: []
+      name: "32TiB_2",
+      free_threads: 0 // init
     },
     {
-      name: "32TB_3",
-      active_threads: 0, // init
-      free_threads: 0, // init
-      process_list: []
-    },
-    {
-      name: "32TB_4",
-      active_threads: 0, // init
-      free_threads: 0, // init
-      process_list: []
+      name: "32TiB_3",
+      free_threads: 0 // init
     }
   ];
   // update ram & pos_threads
@@ -47,16 +35,16 @@ export async function main(ns) {
   // initialise servers which are not owned or "home" (credits to Pwnzerfaust, Azirale & Kozd)
 
   // start fetching all server in range of home filter for owned ones, and do depth-scanning
-  const ignoredServers = ["home", "CSEC"]; // do not have money, will never generate
+  const ignoredServers = ["home", "CSEC", "darkweb"]; // do not have money, will never generate
   const homeServers = ns.scan("home");
   const myServers = ns.getPurchasedServers();
-  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != ignoredServers);
+  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != "home" && hmuf != "CSEC" && hmuf != "darkweb");
   const targetServer = D0Servers; // list of "targetable" Servers
   const D1Servers = D0Servers.flatMap(d1uf => ns.scan(d1uf))
-    .filter(d1f => !targetServer.includes(d1f) && d1f != ignoredServers);
+    .filter(d1f => !targetServer.includes(d1f) && d1f != "home" && d1f != "CSEC" && d1f != "darkweb");
   D1Servers.map(d1fs => targetServer.push(d1fs));
   const D2Servers = D1Servers.flatMap(d2uf => ns.scan(d2uf))
-    .filter(d2f => !targetServer.includes(d2f) && d2f != ignoredServers);
+    .filter(d2f => !targetServer.includes(d2f) && d2f != "home" && d2f != "CSEC" && d2f != "darkweb");
   D2Servers.map(d2fs => targetServer.push(d2fs));
 
 
@@ -68,27 +56,29 @@ export async function main(ns) {
       for (var i = 0; i < (srv.process_list.length - 1); i++) {
         srv.active_threads += srv.process_list[i].threads
       }
+      srv.free_threads = srv.pos_threads - srv.active_threads
     }
   };
 
   update_servers();
-  ns.tprint(script_servers);
-  ns.tprint(targetServer);
   // Script-part (in loop)
   const gname = "/ctrl/grow_server.script";
   const wname = "/ctrl/weaken_server.script";
   while (1) {
     for (const tserv of targetServer) {
+      if (ns.hasRootAccess(tserv)) {
       const cur_mon = ns.getServerMoneyAvailable(tserv);
       const max_mon = ns.getServerMaxMoney(tserv);
       const g_multi = Math.ceil(max_mon / cur_mon);
       const ng_threads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
-      if (cur_mon <= (max_mon * 0.99)) { // grow with enough threads for MaxMoney on the Server
-        for (i = 0; i == 1; null) {
+      ns.tprint(tserv+" "+cur_mon+" "+max_mon*0.99+" "+g_multi+" "+ng_threads); //testing purposes, will removed later
+      if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for MaxMoney on the Server
+        for (const i = 0; i == 1; null) {
           for (const ssrv_key in script_servers) {
             const ssrv = script_servers[ssrv_key];
             const cgprocs = ssrv.process_list.filter(gpro => gname.indexOf(gpro.filename) != null);
-            const sgthreads = script_servers.process_list.filter(gpro => gpro.filename.includes(gname) && gpro.args.includes(tserv)).threads.reduce((a,b) => a+b);
+            const sgthreads = script_servers.process_list.filter(gpro => gpro.filename.includes(gname) && gpro.args.includes(tserv)).threads.reduce((a, b) => a + b);
+            ns.tprint("tserv: "+tserv+" ssrv: "+ssrv.name+" cgprocs: "+cgprocs+" sgthreads: "+sgthreads); //testing purposes, will removed later
             if (ng_threads > 0 && ng_threads - sgthreads > 0 && !cgprocs.args.includes(tserv)) {
               if (ssrv.free_threads > g_threads) {
                 ns.exec(gname, ssrv, g_threads, tserv);
@@ -107,10 +97,10 @@ export async function main(ns) {
               }
             }
             else if (ngthreads == 0) {
-              i=1
+              i = 1
             }
             else {
-              ns.tprint("GWCTRL: Server"+ssrv.name+ "not free to grow " + tserv + " . Updating Servers, try again");
+              ns.tprint("GWCTRL: Server" + ssrv.name + "not free to grow " + tserv + " . Updating Servers, try again");
               await ns.sleep(5000);
               await update_servers()
             }
@@ -123,7 +113,7 @@ export async function main(ns) {
           for (const ssrv_key in script_servers) {
             const ssrv = script_servers[ssrv_key];
             const cwprocs = ssrv.process_list.filter(wpro => wpro.filename.includes(wname));
-            const swthreads = script_servers.process_list.filter(wpro => wpro.filename.includes(wname) && wpro.args.includes(tserv)).threads.reduce((a,b) => a+b);
+            const swthreads = script_servers.process_list.filter(wpro => wpro.filename.includes(wname) && wpro.args.includes(tserv)).threads.reduce((a, b) => a + b);
             if (nwthreads > 0 && nwthreads - swthreads > 0 && !tserv.some(stserv => cwprocs.args.includes(stserv))) {
               if (ssrv.free_threads > nwthreads) {
                 ns.exec(wname, ssrv, nwthreads, tserv);
@@ -138,14 +128,14 @@ export async function main(ns) {
               }
               else {
                 if (nwthreads == 0) { i = 1 } // exit because there are enough grow running
-                else {ns.tprint("GWCTRL: Again?") }
+                else { ns.tprint("GWCTRL: Again?") }
               }
             }
             else if (nwthreads == 0) {
-              i=1
+              i = 1
             }
             else {
-              ns.tprint("GWCTRL: Server"+ssrv.name+"not free to weaken " + tserv + " . Updating Servers and try again");
+              ns.tprint("GWCTRL: Server" + ssrv.name + "not free to weaken " + tserv + " . Updating Servers and try again");
               await ns.sleep(5000);
               await update_servers()
             }
@@ -153,6 +143,7 @@ export async function main(ns) {
         }
       }
     };
-    ns.sleep(10000)
+  }
+    await ns.sleep(10000)
   }
 }
