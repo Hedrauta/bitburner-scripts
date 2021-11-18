@@ -71,20 +71,24 @@ export async function main(ns) {
       const max_mon = ns.getServerMaxMoney(tserv);
       const g_multi = Math.ceil(max_mon / cur_mon);
       const ng_threads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
-      ns.tprint(tserv+" "+cur_mon+" "+max_mon*0.99+" "+g_multi+" "+ng_threads); //testing purposes, will removed later
+      ns.tprint(tserv+" "+cur_mon+" "+max_mon*0.99+" "+g_multi+" "+ng_threads);
       if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for MaxMoney on the Server
-        for (const i = 0; i == 1; null) {
+        let gsuccess = true;
+        while (gsuccess) {
+          ns.tryWritePort
           for (const ssrv_key in script_servers) {
             const ssrv = script_servers[ssrv_key];
             const cgprocs = ssrv.process_list.filter(gpro => gname.indexOf(gpro.filename) != null);
-            const sgthreads = script_servers.process_list.filter(gpro => gpro.filename.includes(gname) && gpro.args.includes(tserv)).threads.reduce((a, b) => a + b);
-            ns.tprint("tserv: "+tserv+" ssrv: "+ssrv.name+" cgprocs: "+cgprocs+" sgthreads: "+sgthreads); //testing purposes, will removed later
+            const sprocs = script_servers.map(procs => procs.process_list);
+            const sgthreads = sprocs.filter(gpro => gpro.filename.indexOf(gname) && gpro.args.indexOf(tserv))
+                              .threads.reduce((a, b) => a + b);
+            ns.tprint("tserv: "+tserv+" ssrv: "+ssrv.name+" cgprocs: "+cgprocs+" sgthreads: "+sgthreads);
             if (ng_threads > 0 && ng_threads - sgthreads > 0 && !cgprocs.args.includes(tserv)) {
               if (ssrv.free_threads > g_threads) {
                 ns.exec(gname, ssrv, g_threads, tserv);
                 ng_threads = 0;
                 await update_servers();
-                i = 1
+                gsuccess = false
               }
               else if (ssrv.free_threads > 1 && ssrv.free_threads < g_threads) {
                 ns.exec(gname, ssrv, ssrv.free_threads, tserv);
@@ -92,12 +96,12 @@ export async function main(ns) {
                 await update_servers()
               }
               else {
-                if (ng_threads == 0) { i = 1 } // exit because there are enough grow running
+                if (ng_threads == 0) { gsuccess = false } // exit because there are enough grow running
                 else { ns.tprint("GWCTRL: How?") }
               }
             }
             else if (ngthreads == 0) {
-              i = 1
+              gsuccess = false
             }
             else {
               ns.tprint("GWCTRL: Server" + ssrv.name + "not free to grow " + tserv + " . Updating Servers, try again");
@@ -109,7 +113,8 @@ export async function main(ns) {
       }
       else { // server reached 99% of MaxMoney else weaken with enough threads for HackCTRL
         const nwthreads = Math.ceil((ns.getServerSecurityLevel(host) - ns.getServerMinSecurityLevel(host)) / 0.05);
-        for (i = 0; i == 1; null) {
+        let wsuccess = true;
+        while (wsuccess) {
           for (const ssrv_key in script_servers) {
             const ssrv = script_servers[ssrv_key];
             const cwprocs = ssrv.process_list.filter(wpro => wpro.filename.includes(wname));
@@ -119,7 +124,7 @@ export async function main(ns) {
                 ns.exec(wname, ssrv, nwthreads, tserv);
                 nwthreads = 0;
                 await update_servers();
-                i = 1
+                wsuccess = false
               }
               else if (ssrv.free_threads > 1 && ssrv.free_threads < nwthreads) {
                 ns.exec(wname, ssrv, ssrv.free_threads, tserv);
@@ -127,12 +132,12 @@ export async function main(ns) {
                 await update_servers()
               }
               else {
-                if (nwthreads == 0) { i = 1 } // exit because there are enough grow running
+                if (nwthreads == 0) { wsuccess = false } // exit because there are enough weaken running
                 else { ns.tprint("GWCTRL: Again?") }
               }
             }
             else if (nwthreads == 0) {
-              i = 1
+              wsuccess = false
             }
             else {
               ns.tprint("GWCTRL: Server" + ssrv.name + "not free to weaken " + tserv + " . Updating Servers and try again");
