@@ -78,7 +78,7 @@ export async function main(ns) {
   const gname = "/ctrl/grow_server.script";
   const wname = "/ctrl/weaken_server.script";
   while (1) {
-    targetServer.map(tserv => {
+    for (const tserv of targetServer) {
       const cur_mon = ns.getServerMoneyAvailable(tserv);
       const max_mon = ns.getServerMaxMoney(tserv);
       const g_multi = Math.ceil(max_mon / cur_mon);
@@ -93,13 +93,13 @@ export async function main(ns) {
               if (ssrv.free_threads > g_threads) {
                 ns.exec(gname, ssrv, g_threads, tserv);
                 ng_threads = 0;
-                update_servers;
+                await update_servers();
                 i = 1
               }
               else if (ssrv.free_threads > 1 && ssrv.free_threads < g_threads) {
                 ns.exec(gname, ssrv, ssrv.free_threads, tserv);
                 ng_threads -= ssrv.free_threads;
-                update_servers()
+                await update_servers()
               }
               else {
                 if (ng_threads == 0) { i = 1 } // exit because there are enough grow running
@@ -110,9 +110,9 @@ export async function main(ns) {
               i=1
             }
             else {
-              ns.tprint("GWCTRL: Server"+ssrv.name+ "not free to grow " + tserv + " . Waiting 5 secs");
+              ns.tprint("GWCTRL: Server"+ssrv.name+ "not free to grow " + tserv + " . Updating Servers, try again");
               await ns.sleep(5000);
-              update_servers()
+              await update_servers()
             }
           }
         }
@@ -124,35 +124,35 @@ export async function main(ns) {
             const ssrv = script_servers[ssrv_key];
             const cwprocs = ssrv.process_list.filter(wpro => wpro.filename.includes(wname));
             const swthreads = script_servers.process_list.filter(wpro => wpro.filename.includes(wname) && wpro.args.includes(tserv)).threads.reduce((a,b) => a+b);
-            if (nwthreads > 0 && nwthreads - swthreads > 0 && !cwprocs.args.includes(tserv)) {
+            if (nwthreads > 0 && nwthreads - swthreads > 0 && !tserv.some(stserv => cwprocs.args.includes(stserv))) {
               if (ssrv.free_threads > nwthreads) {
                 ns.exec(wname, ssrv, nwthreads, tserv);
                 nwthreads = 0;
-                update_servers();
+                await update_servers();
                 i = 1
               }
               else if (ssrv.free_threads > 1 && ssrv.free_threads < nwthreads) {
                 ns.exec(wname, ssrv, ssrv.free_threads, tserv);
                 nwthreads -= ssrv.free_threads;
-                update_servers()
+                await update_servers()
               }
               else {
                 if (nwthreads == 0) { i = 1 } // exit because there are enough grow running
-                else { ns.tprint("GWCTRL: Again?") }
+                else {ns.tprint("GWCTRL: Again?") }
               }
             }
             else if (nwthreads == 0) {
               i=1
             }
             else {
-              ns.tprint("GWCTRL: Server"+ssrv.name+"not free to weaken " + tserv + " . Waiting 5 secs");
+              ns.tprint("GWCTRL: Server"+ssrv.name+"not free to weaken " + tserv + " . Updating Servers and try again");
               await ns.sleep(5000);
-              update_servers()
+              await update_servers()
             }
           }
         }
       }
-    });
+    };
     ns.sleep(10000)
   }
 }
