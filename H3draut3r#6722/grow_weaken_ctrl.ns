@@ -47,15 +47,16 @@ export async function main(ns) {
   // initialise servers which are not owned or "home" (credits to Pwnzerfaust, Azirale & Kozd)
 
   // start fetching all server in range of home filter for owned ones, and do depth-scanning
+  const ignoredServers = ["home", "CSEC"]; // do not have money, will never generate
   const homeServers = ns.scan("home");
   const myServers = ns.getPurchasedServers();
-  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != "home");
+  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != ignoredServers);
   const targetServer = D0Servers; // list of "targetable" Servers
   const D1Servers = D0Servers.flatMap(d1uf => ns.scan(d1uf))
-    .filter(d1f => !targetServer.includes(d1f) && d1f != "home");
+    .filter(d1f => !targetServer.includes(d1f) && d1f != ignoredServers);
   D1Servers.map(d1fs => targetServer.push(d1fs));
   const D2Servers = D1Servers.flatMap(d2uf => ns.scan(d2uf))
-    .filter(d2f => !targetServer.includes(d2f) && d2f != "home");
+    .filter(d2f => !targetServer.includes(d2f) && d2f != ignoredServers);
   D2Servers.map(d2fs => targetServer.push(d2fs));
 
 
@@ -86,7 +87,7 @@ export async function main(ns) {
         for (i = 0; i == 1; null) {
           for (const ssrv_key in script_servers) {
             const ssrv = script_servers[ssrv_key];
-            const cgprocs = ssrv.process_list.filter(gpro => gpro.filename.includes(gname));
+            const cgprocs = ssrv.process_list.filter(gpro => gname.indexOf(gpro.filename) != null);
             const sgthreads = script_servers.process_list.filter(gpro => gpro.filename.includes(gname) && gpro.args.includes(tserv)).threads.reduce((a,b) => a+b);
             if (ng_threads > 0 && ng_threads - sgthreads > 0 && !cgprocs.args.includes(tserv)) {
               if (ssrv.free_threads > g_threads) {
