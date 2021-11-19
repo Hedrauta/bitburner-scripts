@@ -1,3 +1,5 @@
+var depth = 15; // depth of scanning targetable servers
+
 /** @param {NS} ns **/
 export async function main(ns) {
   let script_servers = [
@@ -36,10 +38,26 @@ export async function main(ns) {
 
   // start fetching all server in range of home. filter for owned ones, and do depth-scanning/filter
   let ignoredServers = ["home", "CSEC", "darkweb"]; // rethink this one
-  let homeServers = ns.scan("home");
+
+  async function depthscan(scanlist, targetlist) {
+    let depthlf = scanlist.flatMap(dssl => ns.scan(dssl))
+                    .filter(dsufl => !targetlist.includes(dsufl) && ignoredServers.indexOf(dsufl) == -1 && ns.getServerMaxMoney(dsufl) > 0);
+    depthlf.map(dsfl => targetlist.push(dsfl));
+    scanlist = depthlf
+  }
+  
+  let homeServers = ns.scan("home"); //init scan + 3
   let myServers = ns.getPurchasedServers();
-  let D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != "home" && hmuf != "CSEC" && hmuf != "darkweb");
-  let targetServer = D0Servers; // list of "targetable" Servers
+  let D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && ignoredServers.indexOf(hmuf) == -1);
+  let targetServer = D0Servers; // initialised list of "targetable" Servers at Depth0, now do depth-scan until depth ..... 15?
+  for (i=0; i=depth; i++) {
+    await depthscan(targetServer, targetServer)
+  }
+  
+
+  
+
+  
   let D1Servers = D0Servers.flatMap(d1uf => ns.scan(d1uf))
     .filter(d1f => !targetServer.includes(d1f) && d1f != "home" && d1f != "CSEC" && d1f != "darkweb");
   D1Servers.map(d1fs => targetServer.push(d1fs));
@@ -54,7 +72,7 @@ export async function main(ns) {
       srv.free_threads = srv.pos_threads - srv.active_threads
     }
   };
-
+y
  update_servers();
 
   // Script-part (in loop)
