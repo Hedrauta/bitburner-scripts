@@ -1,6 +1,6 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-  const script_servers = [
+  let script_servers = [
     {
       name: "32TiB_1",
       free_threads: 0 // init
@@ -15,9 +15,9 @@ export async function main(ns) {
     }
   ];
   // update ram & pos_threads
-  const script_size = 1.75;
+  let script_size = 1.75;
   for (var srv_key in script_servers) {
-    const ramsrv = script_servers[srv_key];
+    let ramsrv = script_servers[srv_key];
     ramsrv.max_ram = ns.getServerMaxRam(ramsrv.name);
     ramsrv.pos_threads = Math.floor(ramsrv.max_ram / script_size)
   };
@@ -26,7 +26,7 @@ export async function main(ns) {
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", "/ctrl/grow_server.script", ns.gethostname);
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", "/ctrl/weaken_server.script", ns.gethostname);
   for (var copy_key in script_servers) {
-    const srvscp = script_servers[copy_key];
+    let srvscp = script_servers[copy_key];
     await ns.scp(["/ctrl/grow_server.script", "/ctrl/weaken_server.script"], ns.getHostname(), srvscp.name)
   }
   // done copy ≡(▔﹏▔)≡
@@ -35,53 +35,49 @@ export async function main(ns) {
   // initialise servers which are not owned or "home" (credits to Pwnzerfaust, Azirale & Kozd)
 
   // start fetching all server in range of home. filter for owned ones, and do depth-scanning/filter
-  const ignoredServers = ["home", "CSEC", "darkweb"]; // do not have money, will never generate
-  const homeServers = ns.scan("home");
-  const myServers = ns.getPurchasedServers();
-  const D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != "home" && hmuf != "CSEC" && hmuf != "darkweb");
-  const targetServer = D0Servers; // list of "targetable" Servers
-  const D1Servers = D0Servers.flatMap(d1uf => ns.scan(d1uf))
+  let ignoredServers = ["home", "CSEC", "darkweb"]; // rethink this one
+  let homeServers = ns.scan("home");
+  let myServers = ns.getPurchasedServers();
+  let D0Servers = homeServers.filter(hmuf => !myServers.includes(hmuf) && hmuf != "home" && hmuf != "CSEC" && hmuf != "darkweb");
+  let targetServer = D0Servers; // list of "targetable" Servers
+  let D1Servers = D0Servers.flatMap(d1uf => ns.scan(d1uf))
     .filter(d1f => !targetServer.includes(d1f) && d1f != "home" && d1f != "CSEC" && d1f != "darkweb");
   D1Servers.map(d1fs => targetServer.push(d1fs));
-  const D2Servers = D1Servers.flatMap(d2uf => ns.scan(d2uf))
+  let D2Servers = D1Servers.flatMap(d2uf => ns.scan(d2uf))
     .filter(d2f => !targetServer.includes(d2f) && d2f != "home" && d2f != "CSEC" && d2f != "darkweb");
   D2Servers.map(d2fs => targetServer.push(d2fs));
 
-
-
   async function update_servers() {
     for (var srv of script_servers) {
-      srv.active_threads = 0;
-      srv.process_list = ns.ps(srv.name)
-      for (var i = 0; i < (srv.process_list.length - 1); i++) {
-        srv.active_threads += srv.process_list[i].threads
-      }
+      srv.process_list = ns.ps(srv.name);
+      srv.active_threads = srv.process_list.reduce((a, b) => a + b.threads, 0);
       srv.free_threads = srv.pos_threads - srv.active_threads
     }
   };
 
-  update_servers();
+ update_servers();
+
   // Script-part (in loop)
-  const gname = "ctrl/grow_server.script";
-  const sgname = "/ctrl/grow_server.script";
-  const wname = "ctrl/weaken_server.script";
-  const swname = "/ctrl/weaken_server.script";
+  let gname = "ctrl/grow_server.script";
+  let sgname = "/ctrl/grow_server.script";
+  let wname = "ctrl/weaken_server.script";
+  let swname = "/ctrl/weaken_server.script";
   while (1) {
     for (const tserv of targetServer) {
       if (ns.hasRootAccess(tserv)) {
-        const cur_mon = ns.getServerMoneyAvailable(tserv);
-        const max_mon = ns.getServerMaxMoney(tserv);
-        const g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
+        let cur_mon = ns.getServerMoneyAvailable(tserv);
+        let max_mon = ns.getServerMaxMoney(tserv);
+        let g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
         let ng_threads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
         if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for MaxMoney on the Server
           let gsuccess = true;
           while (gsuccess) {
             for (const ssrv_key in script_servers) {
-              const ssrv = script_servers[ssrv_key];
-              const sprocs = script_servers.map(procs => procs.process_list);
-              const sgthreads = sprocs.flat().filter(gpro => gpro.filename != undefined && (gpro.filename || "").indexOf(sgname) != -1 && (gpro.args || []).indexOf(tserv) !== -1)
+              let ssrv = script_servers[ssrv_key];
+              let sprocs = script_servers.map(procs => procs.process_list);
+              let sgthreads = sprocs.flat().filter(gpro => gpro.filename != undefined && (gpro.filename || "").indexOf(sgname) != -1 && (gpro.args || []).indexOf(tserv) !== -1)
                 .reduce((a, b) => a + b.threads, 0);
-              const cgprocsr = ssrv.process_list.some(gpro => gpro.filename != undefined && (gpro.filename || "").indexOf(sgname) != -1 && (gpro.args || []).indexOf(tserv) !== -1);
+              let cgprocsr = ssrv.process_list.some(gpro => gpro.filename != undefined && (gpro.filename || "").indexOf(sgname) != -1 && (gpro.args || []).indexOf(tserv) !== -1);
               if (ng_threads > 0 && ng_threads - sgthreads > 0 && !cgprocsr) {
                 if (ssrv.free_threads > ng_threads) {
                   ns.exec(gname, ssrv.name, ng_threads, tserv);
@@ -112,12 +108,11 @@ export async function main(ns) {
           let nwthreads = Math.ceil((ns.getServerSecurityLevel(tserv) - ns.getServerMinSecurityLevel(tserv)) * 20);
           let wsuccess = true;
           while (wsuccess) {
-            for (const ssrv_key in script_servers) {
-              const ssrv = script_servers[ssrv_key];
-              const sprocs = script_servers.map(procs => procs.process_list);
-              const swthreads = sprocs.flat().filter(wpro => wpro.filename != undefined && (wpro.filename || "").indexOf(swname) != -1 && (wpro.args[0] || []).indexOf(tserv) != -1)
+            for (const ssrv of script_servers) {
+              let sprocs = script_servers.map(procs => procs.process_list);
+              let swthreads = sprocs.flat().filter(wpro => wpro.filename != undefined && (wpro.filename || "").indexOf(swname) != -1 && (wpro.args[0] || []).indexOf(tserv) != -1)
                 .reduce((a, b) => a + b.threads, 0);
-              const cwprocsr = ssrv.process_list.some(wpro => wpro.filename != undefined && (wpro.filename || "").indexOf(swname) != -1 && (wpro.args[0] || []).indexOf(tserv) != -1);
+              let cwprocsr = ssrv.process_list.some(wpro => wpro.filename != undefined && (wpro.filename || "").indexOf(swname) != -1 && (wpro.args[0] || []).indexOf(tserv) != -1);
               if (nwthreads > 0 && nwthreads - swthreads > 0 && !cwprocsr) {
                 if (ssrv.free_threads > nwthreads) {
                   ns.exec(wname, ssrv.name, nwthreads, tserv);
