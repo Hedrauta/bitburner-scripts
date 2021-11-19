@@ -126,7 +126,7 @@ export async function main(ns) {
               const cwprocs = ssrv.process_list.filter(wpro => wpro.filename.includes(wname));
               const sprocs = script_servers.map(procs => procs.process_list);
               ns.tprint(sprocs); // debug, removed later
-              const swthreads = sprocs.filter(wpro => wpro.filename != undefined && (wpro.filename || "").indexOf(tserv) && (wpro.args || "").indexOf(tserv))
+              const swthreads = sprocs.filter(wpro => wpro.filename != undefined && (wpro.filename || "").indexOf(swname) && (wpro.args || "").indexOf(tserv))
                 .flat()
                 .reduce((a, b) => a + b.threads, 0)
               ns.tprint("sum of weaken threads for arg" + tserv + ":" + swthreads) // debug, removed later
