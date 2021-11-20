@@ -161,7 +161,7 @@ update_process();
               }
               else if (threadPossible(ssrv, swname) > 1 && threadPossible(ssrv, swname) < nwthreads) {
                 start(wname, ssrv.name, threadPossible(ssrv, swname), tserv);
-                nwthreads -= ssrv.free_threads
+                nwthreads -= threadPossible(ssrv, swname)
               }
               else {
                 ns.tprint("GWCTRL: Again?") // or here
