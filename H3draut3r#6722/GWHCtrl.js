@@ -203,7 +203,10 @@ export async function main(ns) {
               ns.tprint("n threads: " + ngthreads)
             }
             if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
-              if (threadPossible(ssrv, sgname) >= ngthreads) {
+              if (cur_sec == 100){
+                gsuccess = false // escape the grow, do some weaken before!
+              }
+              else if (threadPossible(ssrv, sgname) >= ngthreads) {
                 start(gname, ssrv.name, ngthreads, tserv);
                 gsuccess = false;
                 await ns.sleep(10)
