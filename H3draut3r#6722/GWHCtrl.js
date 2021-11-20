@@ -142,7 +142,7 @@ export async function main(ns) {
             update_RAM();
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
             let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
-            ngthreads -= sgthreads
+            let mgthreads = ngthreads - sgthreads;
             if (debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: grow");
@@ -153,7 +153,7 @@ export async function main(ns) {
               ns.tprint("c procsr: " + cgprocsr);
               ns.tprint("n threads: " + ngthreads)
             }
-            if (ngthreads > 0 && (ngthreads - sgthreads) > 0 && !cgprocsr) {
+            if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
               if (threadPossible(ssrv, sgname) > ngthreads) {
                 start(gname, ssrv.name, ngthreads, tserv);
                 ngthreads = 0;
@@ -172,7 +172,7 @@ export async function main(ns) {
                 ns.exit()
               }
             }
-            else if ((ngthreads - sgthreads) <= 0) {
+            else if (mgthreads <= 0) {
               gsuccess = false;
               await ns.sleep(10) // skip that targetserver
             }
@@ -191,7 +191,7 @@ export async function main(ns) {
             update_RAM();
             let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), swname, tserv);
             let cwprocsr = threadSameArg(ssrv.process_list, swname, tserv);
-            nwthreads -= swthreads
+            let mwthreads = nwthreads - swthreads;
             if (debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: weaken");
@@ -203,7 +203,7 @@ export async function main(ns) {
               ns.tprint("n threads: " + nwthreads);
               ns.tprint("tserv: " + tserv)
             }
-            if (nwthreads > 0 && (nwthreads - swthreads) > 0 && !cwprocsr) {
+            if (nwthreads > 0 && mwthreads > 0 && !cwprocsr) {
               if (threadPossible(ssrv, swname) > nwthreads) {
                 start(wname, ssrv.name, nwthreads, tserv);
                 nwthreads = 0;
@@ -222,7 +222,7 @@ export async function main(ns) {
                 ns.exit()
               }
             }
-            else if ((nwthreads - swthreads) <= 0) {
+            else if (mwthreads <= 0) {
               wsuccess = false;
               await ns.sleep(1)// skip the current ssrv bc no free threads
             }
@@ -243,7 +243,7 @@ export async function main(ns) {
             let nhthreads = Math.ceil(hperct / hperc);
             let shthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), shname, tserv);
             let chprocsr = threadSameArg(ssrv.process_list, shname, tserv);
-            nhthreads -= shthreads
+            let mhthreads = nhthreads - shthreads;
             if (debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: hack");
@@ -255,7 +255,7 @@ export async function main(ns) {
               ns.tprint("n threads: " + nhthreads);
               ns.tprint("tserv: " + tserv)
             }
-            if (nhthreads > 0 && (nhthreads - shthreads) > 0 && !chprocsr) {
+            if (nhthreads > 0 && mhthreads > 0 && !chprocsr) {
               if (threadPossible(ssrv, shname) > nhthreads) {
                 start(hname, ssrv.name, nhthreads, tserv);
                 nhthreads = 0;
@@ -274,7 +274,7 @@ export async function main(ns) {
                 ns.exit()
               }
             }
-            else if ((nhthreads - shthreads) <= 0) {
+            else if (mhthreads <= 0) {
               hsuccess = false;
               await ns.sleep(10) // skip that targetserver
             }
