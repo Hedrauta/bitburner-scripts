@@ -78,7 +78,7 @@ export async function main(ns) {
       script_size = 1.7
     }
     update_RAM();
-    return ((sserv.max_ram - sserv.cur_ram) / script_size)
+    return Math.floor((sserv.max_ram - sserv.cur_ram) / script_size)
   }
   // execute script with threads (save some ram 😉)
   function start(script, host, threads, arg) {
