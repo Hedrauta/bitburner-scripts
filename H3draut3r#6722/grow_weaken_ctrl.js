@@ -134,7 +134,7 @@ update_process();
                 await ns.sleep(500)
               }
               else {
-                ns.tprint("GWCTRL: How?") // you should'nt be here
+                ns.alert("You should'nt be here\n ng_threads: "+ng_threads+" || sgthreads: "+sgthreads);
               }
             }
             else if ((ng_threads - sgthreads) <= 0) {
@@ -170,7 +170,7 @@ update_process();
                 await ns.sleep(500)
               }
               else {
-                ns.tprint("GWCTRL: Again?") // or here
+                ns.alert("You should'nt be here\n nwthreads: "+nwthreads+" || swthreads: "+swthreads)
               }
             }
             else if ((nwthreads - swthreads) <= 0) {
