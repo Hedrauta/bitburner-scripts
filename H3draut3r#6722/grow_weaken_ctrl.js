@@ -13,8 +13,7 @@ export async function main(ns) {
 
   // get script_servers max and current ram
   function update_RAM() {
-    for (var srv_key in script_servers) {
-      let ramsrv = script_servers[srv_key];
+    for (var ramsrv of script_servers) {
       ramsrv.max_ram = ns.getServerMaxRam(ramsrv.name);
       ramsrv.cur_ram = ns.getServerUsedRam(ramsrv.name)
     }
@@ -118,10 +117,10 @@ update_process();
         while (gsuccess) {
           for (const ssrv of script_servers) {
             update_process();
+            update_RAM();
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
             let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
-            if (ng_threads > 0 && ng_threads - sgthreads > 0 && !cgprocsr) {
-              update_RAM();
+            if (ng_threads > 0 && (ng_threads - sgthreads) > 0 && !cgprocsr) {
               if (threadPossible(ssrv, sgname) > ng_threads) {
                 start(gname, ssrv.name, ng_threads, tserv);
                 ng_threads = 0;
@@ -150,10 +149,10 @@ update_process();
         while (wsuccess) {
           for (const ssrv of script_servers) {
             update_process();
+            update_RAM();
             let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
-            let cwprocsr = threadSameArg(ssrv.process_list, sgname, tserv);;
-            if (nwthreads > 0 && nwthreads - swthreads > 0 && !cwprocsr) {
-              update_RAM();
+            let cwprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
+            if (nwthreads > 0 && (nwthreads - swthreads) > 0 && !cwprocsr) {
               if (threadPossible(ssrv, swname) > nwthreads) {
                 start(wname, ssrv.name, nwthreads, tserv);
                 nwthreads = 0;
