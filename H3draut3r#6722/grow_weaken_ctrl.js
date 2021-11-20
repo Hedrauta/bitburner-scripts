@@ -4,7 +4,16 @@ var depth = 15; // depth of scanning targetable servers
 export async function main(ns) {
   let use_servers = ["32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; // add servers hostname you want to use for running scripts on them
   let use_non_owned = true;  // use non-owned rooted servers with at least 2GB RAM
-
+  let debug = false; // only set true for issues. Terminal will get spammed with alot of info, be sure max lenghts is high enough
+  /* in debug, there will be several lines "spammed" in the terminal:
+  > list of all script_servers process_list (idc the rest)
+  > action (grow or weak)
+  > sum of all threads running on that action and arg
+  > is there an process with same arg running?
+  > sum of needed threads
+  > target server
+  be ready to kill the script, if an alert is occured and contact me on discord: H3draut3r#6722
+  */
   if (use_non_owned) {
     nors().map(nm => use_servers.push(nm)) // nors is every non-owned rooted server, with ram >= 2GB. function is below
   }
@@ -59,7 +68,7 @@ export async function main(ns) {
   // calculate  process_lists used threads for specific script and arguments, return it for further calculation
   function calculateThreads(sserv, script, arg) {
     if (sserv.length > 0) {
-      return sserv.filter(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
+      return sserv.filter(sf => sf.filename.indexOf(script) != -1 && sf.args.indexOf(arg) !== -1)
             .reduce((a, b) => a + b.threads, 0)
     }
     else {return 0}
@@ -67,7 +76,7 @@ export async function main(ns) {
   // check, if any process with same argument is running
   function threadSameArg(sserv, script, arg) {
     if (sserv.length > 0) {
-      return sserv.some(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
+      return sserv.some(sf => sf.filename.indexOf(script) != -1 && sf.args.indexOf(arg) !== -1)
     }
     else{return false}
   }
@@ -121,25 +130,33 @@ update_process();
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
             let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
             ng_threads -= sgthreads
+            if (debug){ 
+              ns.tprint(script_servers.map(sm=>sm.process_list).flat());
+              ns.tprint("action: grow");
+              ns.tprint("s threads: "+sgthreads);
+              ns.tprint("c procsr: "+cgprocsr);
+              ns.tprint("n threads: "+ng_threads);
+              ns.tprint("tserv: "+tserv)
+              }
             if (ng_threads > 0 && (ng_threads - sgthreads) > 0 && !cgprocsr) {
               if (threadPossible(ssrv, sgname) > ng_threads) {
                 start(gname, ssrv.name, ng_threads, tserv);
                 ng_threads = 0;
                 gsuccess = false;
-                await ns.sleep(500)
+                await ns.sleep(50)
               }
               else if (threadPossible(ssrv, sgname) > 1 && threadPossible(ssrv, sgname) < ng_threads) {
                 start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
                 ng_threads -= threadPossible(ssrv, sgname);
-                await ns.sleep(500)
+                await ns.sleep(50)
               }
               else {
-                ns.alert("You should'nt be here\n ng_threads: "+ng_threads+" || sgthreads: "+sgthreads);
+                ns.alert("Debug:\nYou should'nt be here. Try set debug true and kill it, when this message occurs");
               }
             }
             else if ((ng_threads - sgthreads) <= 0) {
               gsuccess = false;
-              await ns.sleep(500) // skip that targetserver
+              await ns.sleep(50) // skip that targetserver
             }
             else {
               await ns.sleep(1000)
@@ -154,28 +171,36 @@ update_process();
           for (const ssrv of script_servers) {
             update_process();
             update_RAM();
-            let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
-            let cwprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
+            let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), swname, tserv);
+            let cwprocsr = threadSameArg(ssrv.process_list, swname, tserv);
             nwthreads -= swthreads
+            if (debug){ 
+              ns.tprint(script_servers.map(sm=>sm.process_list).flat());
+              ns.tprint("action: weaken");
+              ns.tprint("s threads: "+swthreads);
+              ns.tprint("c procsr: "+cwprocsr);
+              ns.tprint("n threads: "+nwthreads);
+              ns.tprint("tserv: "+tserv)
+              }
             if (nwthreads > 0 && (nwthreads - swthreads) > 0 && !cwprocsr) {
               if (threadPossible(ssrv, swname) > nwthreads) {
                 start(wname, ssrv.name, nwthreads, tserv);
                 nwthreads = 0;
                 wsuccess = false;
-                await ns.sleep(500) // all threads used, end loop for targetserver
+                await ns.sleep(50) // all threads used, end loop for targetserver
               }
               else if (threadPossible(ssrv, swname) > 1 && threadPossible(ssrv, swname) < nwthreads) {
                 start(wname, ssrv.name, threadPossible(ssrv, swname), tserv);
                 nwthreads -= threadPossible(ssrv, swname);
-                await ns.sleep(500)
+                await ns.sleep(50)
               }
               else {
-                ns.alert("You should'nt be here\n nwthreads: "+nwthreads+" || swthreads: "+swthreads)
+                ns.alert("Debug:\nYou should'nt be here. Try set debug true and kill it, when this message occurs");
               }
             }
             else if ((nwthreads - swthreads) <= 0) {
               wsuccess = false;
-              await ns.sleep(500) // skip that targetserver
+              await ns.sleep(50) // skip that targetserver
             }
             else {
               await ns.sleep(1000)
