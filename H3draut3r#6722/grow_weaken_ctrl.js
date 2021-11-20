@@ -50,7 +50,7 @@ export async function main(ns) {
 
   // filter for non-owned servers with maxmoney > 0 ("target server")
   function nots() {
-    return nos().filter(nf => ns.getServerMaxMoney > 0)
+    return nos().filter(nf => ns.getServerMaxMoney(nf) > 0)
   }
 
   // another filter, non-owned, with ram >= 2, for use_non_owned
@@ -59,12 +59,18 @@ export async function main(ns) {
   }
   // calculate  process_lists used threads for specific script and arguments, return it for further calculation
   function calculateThreads(sserv, script, arg) {
-    return sserv.filter(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
-      .reduce((a, b) => a + b.threads, 0)
+    if (sserv.length > 1) {
+      return sserv.filter(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
+            .reduce((a, b) => a + b.threads, 0)
+    }
+    else {return 0}
   }
   // check, if any process with same argument is running
   function threadSameArg(sserv, script, arg) {
-    return sserv.some(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
+    if (sserv.length > 1) {
+      return sserv.some(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
+    }
+    else{return false}
   }
   // 
   function threadPossible(sserv, script) {
