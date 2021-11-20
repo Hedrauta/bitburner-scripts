@@ -1,6 +1,6 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-  let use_servers = ["32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; // add servers hostname you want to use for running scripts on them
+  let use_servers = ["256TiB_1-0","256TiB_1","32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; // add servers hostname you want to use for running scripts on them
   let use_non_owned = true;  // use non-owned rooted servers with at least 2GB RAM
   let hperct = 5; // hack 5% of a targets servers money (or add it via argument)
 
@@ -133,8 +133,9 @@ export async function main(ns) {
       let g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
       let min_sec = ns.getServerMinSecurityLevel(tserv);
       let cur_sec = ns.getServerSecurityLevel(tserv);
+      let wst_multi = ns.weakenAnalyze(1);
       if (cur_sec > (min_sec * 1.05)) { // server reached 99% of MaxMoney else weaken with enough threads for HackCTRL (WIP)
-        let nwthreads = Math.ceil((cur_sec - min_sec) * 20);
+        let nwthreads = Math.ceil((cur_sec - min_sec) / wst_multi);
         let wsuccess = true;
         while (wsuccess) {
           for (const ssrv of script_servers) {
