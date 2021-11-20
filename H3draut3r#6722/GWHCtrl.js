@@ -162,6 +162,7 @@ export async function main(ns) {
               }
               else if (threadPossible(ssrv, swname) >= 1 && threadPossible(ssrv, swname) < nwthreads) {
                 start(wname, ssrv.name, threadPossible(ssrv, swname), tserv);
+                nwthreads -= threadPossible(ssrv, swname);
                 await ns.sleep(10)
               }
               else if (threadPossible(ssrv, swname) == 0){
@@ -213,6 +214,7 @@ export async function main(ns) {
               }
               else if (threadPossible(ssrv, sgname) >= 1 && threadPossible(ssrv, sgname) < ngthreads) {
                 start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
+                ngthreads -= threadPossible(ssrv, sgname);
                 await ns.sleep(10)
               }
               else if (threadPossible(ssrv, sgname) == 0){
@@ -264,6 +266,7 @@ export async function main(ns) {
               }
               else if (threadPossible(ssrv, shname) >= 1 && threadPossible(ssrv, shname) < nhthreads) {
                 start(hname, ssrv.name, threadPossible(ssrv, shname), tserv);
+                nhthreads -= threadPossible(ssrv, shname)
                 await ns.sleep(10)
               }
               else if (threadPossible(ssrv, shname) == 0){
