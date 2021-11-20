@@ -1,5 +1,3 @@
-var depth = 15; // depth of scanning targetable servers
-
 /** @param {NS} ns **/
 export async function main(ns) {
   let use_servers = ["32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; // add servers hostname you want to use for running scripts on them
