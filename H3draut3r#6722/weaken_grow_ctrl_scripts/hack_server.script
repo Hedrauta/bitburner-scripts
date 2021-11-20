@@ -1,0 +1,3 @@
+if (args[0] != null) {
+    hack(args[0]); // simple af
+};
