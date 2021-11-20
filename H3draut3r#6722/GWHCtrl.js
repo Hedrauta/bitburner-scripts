@@ -155,13 +155,12 @@ export async function main(ns) {
               ns.tprint("tserv: " + tserv)
             }
             if (nwthreads > 0 && mwthreads > 0 && !cwprocsr) {
-              if (threadPossible(ssrv, swname) > nwthreads) {
+              if (threadPossible(ssrv, swname) >= nwthreads) {
                 start(wname, ssrv.name, nwthreads, tserv);
-                nwthreads = 0;
                 wsuccess = false;
                 await ns.sleep(10) // all threads used, end loop for targetserver
               }
-              else if (threadPossible(ssrv, swname) > 1 && threadPossible(ssrv, swname) < nwthreads) {
+              else if (threadPossible(ssrv, swname) >= 1 && threadPossible(ssrv, swname) < nwthreads) {
                 start(wname, ssrv.name, threadPossible(ssrv, swname), tserv);
                 await ns.sleep(10)
               }
@@ -204,13 +203,12 @@ export async function main(ns) {
               ns.tprint("n threads: " + ngthreads)
             }
             if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
-              if (threadPossible(ssrv, sgname) > ngthreads) {
+              if (threadPossible(ssrv, sgname) >= ngthreads) {
                 start(gname, ssrv.name, ngthreads, tserv);
-                ngthreads = 0;
                 gsuccess = false;
                 await ns.sleep(10)
               }
-              else if (threadPossible(ssrv, sgname) > 1 && threadPossible(ssrv, sgname) < ngthreads) {
+              else if (threadPossible(ssrv, sgname) >= 1 && threadPossible(ssrv, sgname) < ngthreads) {
                 start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
                 await ns.sleep(10)
               }
@@ -256,13 +254,12 @@ export async function main(ns) {
               ns.tprint("tserv: " + tserv)
             }
             if (nhthreads > 0 && mhthreads > 0 && !chprocsr) {
-              if (threadPossible(ssrv, shname) > nhthreads) {
+              if (threadPossible(ssrv, shname) >= nhthreads) {
                 start(hname, ssrv.name, nhthreads, tserv);
-                nhthreads = 0;
                 hsuccess = false;
                 await ns.sleep(10)
               }
-              else if (threadPossible(ssrv, shname) > 1 && threadPossible(ssrv, shname) < nhthreads) {
+              else if (threadPossible(ssrv, shname) >= 1 && threadPossible(ssrv, shname) < nhthreads) {
                 start(hname, ssrv.name, threadPossible(ssrv, shname), tserv);
                 await ns.sleep(10)
               }
