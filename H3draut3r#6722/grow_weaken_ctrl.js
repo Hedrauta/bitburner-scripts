@@ -59,7 +59,7 @@ export async function main(ns) {
   }
   // calculate  process_lists used threads for specific script and arguments, return it for further calculation
   function calculateThreads(sserv, script, arg) {
-    if (sserv.length > 1) {
+    if (sserv.length > 0) {
       return sserv.filter(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
             .reduce((a, b) => a + b.threads, 0)
     }
@@ -67,7 +67,7 @@ export async function main(ns) {
   }
   // check, if any process with same argument is running
   function threadSameArg(sserv, script, arg) {
-    if (sserv.length > 1) {
+    if (sserv.length > 0) {
       return sserv.some(sf => (sf.filename || "") != undefined && (sf.filename || "").indexOf(script) != -1 && (sf.args || []).indexOf(arg) !== -1)
     }
     else{return false}
@@ -103,6 +103,8 @@ export async function main(ns) {
   }
   // done copy ≡(▔﹏▔)≡
 
+update_RAM(); // initial calls
+update_process();
 
   // Script-part (in loop)
   while (1) {
@@ -115,17 +117,19 @@ export async function main(ns) {
         let gsuccess = true;
         while (gsuccess) {
           for (const ssrv of script_servers) {
+            update_process();
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
-            let cgprocsr = threadSameArg(ssrv.map(sm => sm.process_list).flat(), sgname, tserv);
+            let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
             if (ng_threads > 0 && ng_threads - sgthreads > 0 && !cgprocsr) {
+              update_RAM();
               if (threadPossible(ssrv, sgname) > ng_threads) {
                 start(gname, ssrv.name, ng_threads, tserv);
                 ng_threads = 0;
                 gsuccess = false
               }
-              else if (threadPossible(ssrv) > 1 && threadPossible(ssrv) < ng_threads) {
-                start(gname, ssrv.name, threadPossible(ssrv), tserv);
-                ng_threads -= threadPossible(ssrv)
+              else if (threadPossible(ssrv, sgname) > 1 && threadPossible(ssrv, sgname) < ng_threads) {
+                start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
+                ng_threads -= threadPossible(ssrv, sgname)
               }
               else {
                 ns.tprint("GWCTRL: How?") // you should'nt be here
@@ -145,9 +149,11 @@ export async function main(ns) {
         let wsuccess = true;
         while (wsuccess) {
           for (const ssrv of script_servers) {
+            update_process();
             let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
-            let cwprocsr = threadSameArg(ssrv.map(sm => sm.process_list).flat(), sgname, tserv);;
+            let cwprocsr = threadSameArg(ssrv.process_list, sgname, tserv);;
             if (nwthreads > 0 && nwthreads - swthreads > 0 && !cwprocsr) {
+              update_RAM();
               if (threadPossible(ssrv, swname) > nwthreads) {
                 start(wname, ssrv.name, ng_threads, tserv);
                 nwthreads = 0;
