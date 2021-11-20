@@ -120,6 +120,7 @@ update_process();
             update_RAM();
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
             let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
+            ng_threads -= sgthreads
             if (ng_threads > 0 && (ng_threads - sgthreads) > 0 && !cgprocsr) {
               if (threadPossible(ssrv, sgname) > ng_threads) {
                 start(gname, ssrv.name, ng_threads, tserv);
@@ -155,6 +156,7 @@ update_process();
             update_RAM();
             let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
             let cwprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
+            nwthreads -= swthreads
             if (nwthreads > 0 && (nwthreads - swthreads) > 0 && !cwprocsr) {
               if (threadPossible(ssrv, swname) > nwthreads) {
                 start(wname, ssrv.name, nwthreads, tserv);
