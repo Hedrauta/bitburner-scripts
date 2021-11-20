@@ -155,7 +155,7 @@ update_process();
             if (nwthreads > 0 && nwthreads - swthreads > 0 && !cwprocsr) {
               update_RAM();
               if (threadPossible(ssrv, swname) > nwthreads) {
-                start(wname, ssrv.name, ng_threads, tserv);
+                start(wname, ssrv.name, nwthreads, tserv);
                 nwthreads = 0;
                 wsuccess = false // all threads used, end loop for targetserver
               }
