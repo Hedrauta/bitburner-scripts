@@ -133,56 +133,7 @@ export async function main(ns) {
       let g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
       let min_sec = ns.getServerMinSecurityLevel(tserv);
       let cur_sec = ns.getServerSecurityLevel(tserv);
-      if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for MaxMoney on the Server
-        let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
-        let gsuccess = true;
-        while (gsuccess) {
-          for (const ssrv of script_servers) {
-            update_process();
-            update_RAM();
-            let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
-            let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
-            let mgthreads = ngthreads - sgthreads;
-            if (debug) {
-              ns.tprint(script_servers.map(sm => sm.process_list));
-              ns.tprint("action: grow");
-              ns.tprint("ssrv: " + ssrv.name);
-              ns.tprint("tserv: " + tserv);
-              ns.tprint("f threads: " + threadPossible(ssrv, sgname));
-              ns.tprint("s threads: " + sgthreads);
-              ns.tprint("c procsr: " + cgprocsr);
-              ns.tprint("n threads: " + ngthreads)
-            }
-            if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
-              if (threadPossible(ssrv, sgname) > ngthreads) {
-                start(gname, ssrv.name, ngthreads, tserv);
-                ngthreads = 0;
-                gsuccess = false;
-                await ns.sleep(10)
-              }
-              else if (threadPossible(ssrv, sgname) > 1 && threadPossible(ssrv, sgname) < ngthreads) {
-                start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
-                await ns.sleep(10)
-              }
-              else if (threadPossible(ssrv, sgname) == 0){
-                await ns.sleep(1)// skip the current ssrv bc no free threads
-              }
-              else {
-                ns.alert("Debug:\nYou should'nt be here. Try set debug true");
-                ns.exit()
-              }
-            }
-            else if (mgthreads <= 0) {
-              gsuccess = false;
-              await ns.sleep(10) // skip that targetserver
-            }
-            else {
-              await ns.sleep(1000)
-            }
-          }
-        }
-      }
-      else if (cur_sec > (min_sec * 1.05)) { // server reached 99% of MaxMoney else weaken with enough threads for HackCTRL (WIP)
+      if (cur_sec > (min_sec * 1.05)) { // server reached 99% of MaxMoney else weaken with enough threads for HackCTRL (WIP)
         let nwthreads = Math.ceil((cur_sec - min_sec) * 20);
         let wsuccess = true;
         while (wsuccess) {
@@ -225,6 +176,55 @@ export async function main(ns) {
             else if (mwthreads <= 0) {
               wsuccess = false;
               await ns.sleep(1)// skip the current ssrv bc no free threads
+            }
+            else {
+              await ns.sleep(1000)
+            }
+          }
+        }
+      }
+      else if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for MaxMoney on the Server
+        let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
+        let gsuccess = true;
+        while (gsuccess) {
+          for (const ssrv of script_servers) {
+            update_process();
+            update_RAM();
+            let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
+            let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
+            let mgthreads = ngthreads - sgthreads;
+            if (debug) {
+              ns.tprint(script_servers.map(sm => sm.process_list));
+              ns.tprint("action: grow");
+              ns.tprint("ssrv: " + ssrv.name);
+              ns.tprint("tserv: " + tserv);
+              ns.tprint("f threads: " + threadPossible(ssrv, sgname));
+              ns.tprint("s threads: " + sgthreads);
+              ns.tprint("c procsr: " + cgprocsr);
+              ns.tprint("n threads: " + ngthreads)
+            }
+            if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
+              if (threadPossible(ssrv, sgname) > ngthreads) {
+                start(gname, ssrv.name, ngthreads, tserv);
+                ngthreads = 0;
+                gsuccess = false;
+                await ns.sleep(10)
+              }
+              else if (threadPossible(ssrv, sgname) > 1 && threadPossible(ssrv, sgname) < ngthreads) {
+                start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
+                await ns.sleep(10)
+              }
+              else if (threadPossible(ssrv, sgname) == 0){
+                await ns.sleep(1)// skip the current ssrv bc no free threads
+              }
+              else {
+                ns.alert("Debug:\nYou should'nt be here. Try set debug true");
+                ns.exit()
+              }
+            }
+            else if (mgthreads <= 0) {
+              gsuccess = false;
+              await ns.sleep(10) // skip that targetserver
             }
             else {
               await ns.sleep(1000)
