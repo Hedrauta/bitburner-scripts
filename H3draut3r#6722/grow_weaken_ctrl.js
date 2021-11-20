@@ -124,21 +124,24 @@ update_process();
               if (threadPossible(ssrv, sgname) > ng_threads) {
                 start(gname, ssrv.name, ng_threads, tserv);
                 ng_threads = 0;
-                gsuccess = false
+                gsuccess = false;
+                await ns.sleep(500)
               }
               else if (threadPossible(ssrv, sgname) > 1 && threadPossible(ssrv, sgname) < ng_threads) {
                 start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
-                ng_threads -= threadPossible(ssrv, sgname)
+                ng_threads -= threadPossible(ssrv, sgname);
+                await ns.sleep(500)
               }
               else {
                 ns.tprint("GWCTRL: How?") // you should'nt be here
               }
             }
             else if ((ng_threads - sgthreads) <= 0) {
-              gsuccess = false // skip that targetserver
+              gsuccess = false;
+              await ns.sleep(500) // skip that targetserver
             }
             else {
-              await ns.sleep(5000)
+              await ns.sleep(1000)
             }
           }
         }
@@ -156,21 +159,24 @@ update_process();
               if (threadPossible(ssrv, swname) > nwthreads) {
                 start(wname, ssrv.name, nwthreads, tserv);
                 nwthreads = 0;
-                wsuccess = false // all threads used, end loop for targetserver
+                wsuccess = false;
+                await ns.sleep(500) // all threads used, end loop for targetserver
               }
               else if (threadPossible(ssrv, swname) > 1 && threadPossible(ssrv, swname) < nwthreads) {
                 start(wname, ssrv.name, threadPossible(ssrv, swname), tserv);
-                nwthreads -= threadPossible(ssrv, swname)
+                nwthreads -= threadPossible(ssrv, swname);
+                await ns.sleep(500)
               }
               else {
                 ns.tprint("GWCTRL: Again?") // or here
               }
             }
             else if ((nwthreads - swthreads) <= 0) {
-              wsuccess = false // skip that targetserver
+              wsuccess = false;
+              await ns.sleep(500) // skip that targetserver
             }
             else {
-              await ns.sleep(5000)
+              await ns.sleep(1000)
             }
           }
         }
