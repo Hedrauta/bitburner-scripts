@@ -1,12 +1,14 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-  let use_servers = ["256TiB_1-0","256TiB_1","32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; 
+  let use_servers = ["pserv-0","pserv-1"]; 
   // add servers hostname you want to use for running scripts on them, if you want only run on this one
-  let arg = ns.flags([
+
+  let arg = ns.flags([ // options to add as a flag (--hack % , --use_home, --use_all_purchased , --use_non_owned , --ignore (special ussage) )
     ['hack', 5], // hack-percentage of targets server money, run with argument "--hack *integer*" (>=1 && <=100)
-    ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run
+    ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run's argument
+    ['use_home', false], // include home-server as a script-server
     ['use_non_owned', false], // use non-owned, rooted server as script-server, to enable, run with "--use_non_owned"
-    ['use_all', false], // use of all purchased server (except ignored ones), to enable, run with "--use_all"
+    ['use_all_purchased', false], // use of all purchased server (except ignored ones), to enable, run with "--use_all_purchased"
     ['debug', false]
 ]);
 
@@ -22,15 +24,18 @@ export async function main(ns) {
   */
 
   function upd_ussrvr() { // special function for special use
-  if ( arg.use_all ){
+  if ( arg.use_all_purchased ){
     // if true, use every purchased server (except home ofc)
     use_servers = ns.getPurchasedServers().filter(nsgf => arg.ignore.indexOf(nsgf) == -1)
+    if (arg.use_home) {
+      use_servers.push("home")
+    }
   }
   if (arg.use_non_owned) {
     nors().map(nm => use_servers.push(nm)) // nors is every non-owned rooted server, with ram >= 2GB. function is below
   }
+  return use_servers;
   }
-    upd_ussrvr();
   
   let hperct = 5;
   if (arg.hack >= 1 && arg.hack <= 100 ) {
@@ -38,19 +43,21 @@ export async function main(ns) {
     // if there's a number set as first argument and in range, set hperct
   }
   let script_servers = [];
-  function upd_ssrvr(){ // function for later use (if use_all_ps is set true)
-  script_servers = use_servers.map(us => { return { name: us } });
+  function upd_ssrvr(){ // function for later use (if use_all_purchased_ps is set true)
+  script_servers = upd_ussrvr().map( us => { return { name: us, values: ns.getServer(us) } } );
   }
   upd_ssrvr();
 
 
   // functions
 
-  // get script_servers max and current ram
+  // get script_servers max and current ram (+ weaken-result for servers core)
   function update_RAM() {
     for (var ramsrv of script_servers) {
-      ramsrv.max_ram = ns.getServerMaxRam(ramsrv.name);
-      ramsrv.cur_ram = ns.getServerUsedRam(ramsrv.name)
+      let data = ns.getServer(ramsrv)
+      ramsrv.max_ram = data.maxRam;
+      ramsrv.cur_ram = data.usedRam;
+      ramsrv.w_res = ns.weakenanalyze(1, ns.get)
     }
   };
   // start fetching all Servers (Credits to skytos#2092)
@@ -87,7 +94,7 @@ export async function main(ns) {
     return nos().filter(nf => ns.getServerMaxMoney(nf) > 0)
   }
 
-  // another filter, non-owned, with ram >= 2, for use_non_owned
+  // another filter, non-owned, with ram >= 2, for use in use_non_owned
   function nors() {
     return nos().filter(nf => ns.getServerMaxRam(nf) >= 2)
   }
@@ -129,14 +136,15 @@ export async function main(ns) {
   let swname = "/ctrl/weaken_server.script";
   let hname = "ctrl/hack_server.script";
   let shname = "/ctrl/hack_server.script";
-  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", sgname, ns.gethostname);
-  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", swname, ns.gethostname);
-  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", shname, ns.gethostname);
+  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", sgname, ns.getHostname);
+  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", swname, ns.getHostname);
+  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", shname, ns.getHostname);
   async function copy_files(){
   for (var srvscp of script_servers) {
+    if (srvscp != ns.getHostname()){ // ignore current server for copy, bc scripts are already existent
     await ns.scp([sgname, swname, shname], ns.getHostname(), srvscp.name);
     await ns.sleep(10)
-  }}
+  }}}
   await copy_files();
   // done copy ≡(▔﹏▔)≡
 
@@ -147,7 +155,7 @@ export async function main(ns) {
   ns.tprint("Values set on startup: \n Hacking " + hperct + "% of targets Server money.\nUse non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned);
   ns.tprint("Servers used for running scripts:");
   ns.tprint(use_servers)
-  ns.tprint("if --use_all is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
+  ns.tprint("if --use_all_purchased is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
   ns.tprint("Currently targetable Server (you can still nuke and they will be added later in run):");
   ns.tprint(nots());
   ns.tprint("\n\n Starting GWHCTRL. Keep-alives will be send as toast (bottom right notification!")
@@ -161,8 +169,8 @@ export async function main(ns) {
   }
   // Script-part (in loop)
   while (1) {
-    if (arg.use_all) {
-      upd_ussrvr();
+    if (arg.use_non_owned) {
+      upd_ussrvr(); // includes if --use_all_purchased is set
       upd_ssrvr();
       await copy_files();
       update_RAM();
@@ -174,7 +182,6 @@ export async function main(ns) {
       let g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
       let min_sec = ns.getServerMinSecurityLevel(tserv);
       let cur_sec = ns.getServerSecurityLevel(tserv);
-      let wst_multi = ns.weakenAnalyze(1);
       if (cur_sec > (min_sec * 1.05)) { // weaken the servers security-level to minimum (before grow)
         let nwthreads = Math.ceil((cur_sec - min_sec) / wst_multi);
         let wsuccess = true;
