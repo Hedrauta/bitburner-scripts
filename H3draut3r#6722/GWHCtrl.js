@@ -131,9 +131,11 @@ export async function main(ns) {
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", sgname, ns.gethostname);
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", swname, ns.gethostname);
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", shname, ns.gethostname);
+  async function copy_files(){
   for (var srvscp of script_servers) {
     await ns.scp([sgname, swname, shname], ns.getHostname(), srvscp.name)
-  }
+  }}
+  await copy_files();
   // done copy ≡(▔﹏▔)≡
 
   update_RAM(); // initial calls
@@ -153,6 +155,7 @@ export async function main(ns) {
     if (arg.use_all) {
       upd_ussrvr();
       upd_ssrvr();
+      await copy_files();
       update_RAM();
       update_process()
     }
