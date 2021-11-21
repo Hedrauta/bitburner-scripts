@@ -1,26 +1,48 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-  let use_servers = ["256TiB_1-0","256TiB_1","32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; // add servers hostname you want to use for running scripts on them
-  let use_non_owned = true;  // use non-owned rooted servers with at least 2GB RAM
-  let hperct = 5; // hack 5% of a targets servers money (or add it via argument)
+  let use_servers = ["256TiB_1-0","256TiB_1","32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; 
+  // add servers hostname you want to use for running scripts on them, if you want only run on this one
+  let arg = ns.flags([
+    ['hack', 5], // hack-percentage of targets server money, run with argument "--hack *integer*" (>=1 && <=100)
+    ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run
+    ['use_non_owned', false], // use non-owned, rooted server as script-server, to enable, run with "--use_non_owned"
+    ['use_all', false], // use of all purchased server (except ignored ones), to enable, run with "--use_all"
+    ['debug', false]
+]);
 
-  let debug = false; // only set true for issues. Terminal will get spammed with alot of info, be sure max lenghts is high enough
-  /* in debug, there will be several lines "spammed" in the terminal:
+  /* only enable with argument "--debug" if an alert occurs. Terminal will get spammed with alot of info, be sure max lenghts is high enough
+   in debug, there will be several lines "spammed" in the terminal:
   > list of all script_servers process_list (idc the rest)
   > action (grow or weak)
-  > sum of all threads running on that action and arg
+  > sum of all threads running on that action and argument of target server
   > is there an process with same arg running?
   > sum of needed threads
   > target server
-  if an alert is occured, script does exits itself and contact me with the currents response on discord: H3draut3r#6722
+  if an alert is occuring, script does exits itself and contact me with the currents response on discord: H3draut3r#6722
   */
-  if (use_non_owned) {
+
+  function upd_ussrvr() { // special function for special use
+  if ( arg.use_all ){
+    // if true, use every purchased server (except home ofc)
+    use_servers = ns.getPurchasedServers().filter(nsgf => arg.ignore.indexOf(nsgf) == -1)
+  }}
+    upd_ussrvr();
+  
+  if (arg.use_non_owned) {
     nors().map(nm => use_servers.push(nm)) // nors is every non-owned rooted server, with ram >= 2GB. function is below
   }
-  if (ns.args[0] >= 1 && ns.args[0] <= 100) {
-    hperct = ns.args[0]
+  let hperct = 5;
+  if (arg.hack >= 1 && arg.hack <= 100 ) {
+    hperct = arg.hack
+    // if there's a number set as first argument and in range, set hperct
   }
-  let script_servers = use_servers.map(us => { return { name: us } });
+  let script_servers = [];
+  function upd_ssrvr(){ // function for later use (if use_all_ps is set true)
+  script_servers = use_servers.map(us => { return { name: us } });
+  }
+  upd_ssrvr();
+
+
   // functions
 
   // get script_servers max and current ram
@@ -118,15 +140,22 @@ export async function main(ns) {
   update_process();
 
   ns.tprint("Starting automatic Grow/Weaken/Hack");
-  ns.tprint("Values set on startup: \n Hack-Percentage: " + hperct + "%  Use non-owned rooted servers as a Script-Server: " + use_non_owned);
+  ns.tprint("Values set on startup: \n Hacking " + hperct + "% of targets Server money.\nUse non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned);
   ns.tprint("Servers used for running scripts:");
   ns.tprint(use_servers)
-  ns.tprint("Currently targetable Server (you can still nuke and they will be added in run):")
+  ns.tprint("if --use_all is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
+  ns.tprint("Currently targetable Server (you can still nuke and they will be added later in run):");
   ns.tprint(nots());
-  ns.tprint("\n\n Starting GWHCTRL. HF!")
+  ns.tprint("\n\n Starting GWHCTRL. Keep-alives will be send as toast (bottom right notification!")
   await ns.sleep(1000)
   // Script-part (in loop)
   while (1) {
+    if (arg.use_all) {
+      upd_ussrvr();
+      upd_ssrvr();
+      update_RAM();
+      update_process()
+    }
     for (const tserv of nots()) {
       let cur_mon = ns.getServerMoneyAvailable(tserv);
       let max_mon = ns.getServerMaxMoney(tserv);
@@ -134,7 +163,7 @@ export async function main(ns) {
       let min_sec = ns.getServerMinSecurityLevel(tserv);
       let cur_sec = ns.getServerSecurityLevel(tserv);
       let wst_multi = ns.weakenAnalyze(1);
-      if (cur_sec > (min_sec * 1.05)) { // server reached 99% of MaxMoney else weaken with enough threads for HackCTRL (WIP)
+      if (cur_sec > (min_sec * 1.05)) { // weaken the servers security-level to minimum (before grow)
         let nwthreads = Math.ceil((cur_sec - min_sec) / wst_multi);
         let wsuccess = true;
         while (wsuccess) {
@@ -144,7 +173,7 @@ export async function main(ns) {
             let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), swname, tserv);
             let cwprocsr = threadSameArg(ssrv.process_list, swname, tserv);
             let mwthreads = nwthreads - swthreads;
-            if (debug) {
+            if (arg.debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: weaken");
               ns.tprint("ssrv: " + ssrv.name);
@@ -167,10 +196,10 @@ export async function main(ns) {
                 await ns.sleep(10)
               }
               else if (threadPossible(ssrv, swname) == 0){
-                await ns.sleep(1)// skip the current ssrv
+                await ns.sleep(1)// skip the current ssrv bc no free threads
               }
               else {
-                ns.alert("Debug:\nYou should'nt be here. Try set debug true");
+                ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
                 ns.exit()
               }
             }
@@ -184,7 +213,7 @@ export async function main(ns) {
           }
         }
       }
-      else if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for MaxMoney on the Server
+      else if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for possible MaxMoney on the Server
         let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
         let gsuccess = true;
         while (gsuccess) {
@@ -194,7 +223,7 @@ export async function main(ns) {
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
             let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
             let mgthreads = ngthreads - sgthreads;
-            if (debug) {
+            if (arg.debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: grow");
               ns.tprint("ssrv: " + ssrv.name);
@@ -222,7 +251,7 @@ export async function main(ns) {
                 await ns.sleep(1)// skip the current ssrv bc no free threads
               }
               else {
-                ns.alert("Debug:\nYou should'nt be here. Try set debug true");
+                ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
                 ns.exit()
               }
             }
@@ -238,17 +267,16 @@ export async function main(ns) {
       }
       else { // run hack, bc security is lowered and money is at max
         let hsuccess = true;
+        let nhthreads = ns.hackAnalyzeThreads(tserv, (cur_mon * hperct / 100));
         while (hsuccess) {
           for (const ssrv of script_servers) {
             update_process();
             update_RAM();
             // some hackmath!
-            let hperc = ns.hackAnalyze(tserv);
-            let nhthreads = Math.ceil(hperct / hperc);
             let shthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), shname, tserv);
             let chprocsr = threadSameArg(ssrv.process_list, shname, tserv);
             let mhthreads = nhthreads - shthreads;
-            if (debug) {
+            if (arg.debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: hack");
               ns.tprint("ssrv: " + ssrv.name);
@@ -274,7 +302,7 @@ export async function main(ns) {
                 await ns.sleep(1)// skip the current ssrv bc no free threads
               }
               else {
-                ns.alert("Debug:\nYou should'nt be here. Try set debug true");
+                ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
                 ns.exit()
               }
             }
@@ -290,5 +318,6 @@ export async function main(ns) {
       }
     };
     await ns.sleep(15000)
+    ns.toast("GWHCtrl: Still alive!")
   }
 }
