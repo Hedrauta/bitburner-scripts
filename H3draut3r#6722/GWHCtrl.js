@@ -25,12 +25,13 @@ export async function main(ns) {
   if ( arg.use_all ){
     // if true, use every purchased server (except home ofc)
     use_servers = ns.getPurchasedServers().filter(nsgf => arg.ignore.indexOf(nsgf) == -1)
-  }}
-    upd_ussrvr();
-  
+  }
   if (arg.use_non_owned) {
     nors().map(nm => use_servers.push(nm)) // nors is every non-owned rooted server, with ram >= 2GB. function is below
   }
+  }
+    upd_ussrvr();
+  
   let hperct = 5;
   if (arg.hack >= 1 && arg.hack <= 100 ) {
     hperct = arg.hack
@@ -133,7 +134,8 @@ export async function main(ns) {
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", shname, ns.gethostname);
   async function copy_files(){
   for (var srvscp of script_servers) {
-    await ns.scp([sgname, swname, shname], ns.getHostname(), srvscp.name)
+    await ns.scp([sgname, swname, shname], ns.getHostname(), srvscp.name);
+    await ns.sleep(10)
   }}
   await copy_files();
   // done copy ≡(▔﹏▔)≡
@@ -150,6 +152,13 @@ export async function main(ns) {
   ns.tprint(nots());
   ns.tprint("\n\n Starting GWHCTRL. Keep-alives will be send as toast (bottom right notification!")
   await ns.sleep(1000)
+
+  // disable logging for certain functions (if debug is fals), i do spam them alot 😂
+  if (!arg.debug){
+    ns.disableLog("getServerUsedRam");
+    ns.disableLog("getServerMaxRam");
+    ns.disableLog("sleep")
+  }
   // Script-part (in loop)
   while (1) {
     if (arg.use_all) {
