@@ -153,7 +153,7 @@ let use_servers = arg.include;
   update_process();
 
   ns.tprint("Starting automatic Grow/Weaken/Hack");
-  ns.tprint("Values set on startup: \n Hacking " + hperct + "% of targets Server money.\nUse non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned);
+  ns.tprint("Values set on startup: \n Hacking " + arg.hack + "% of targets Server money.\nUse non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned);
   ns.tprint("Servers used for running scripts:");
   ns.tprint(use_servers)
   ns.tprint("if --use_all_purchased is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
@@ -248,6 +248,7 @@ let use_servers = arg.include;
             let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
             let mgthreads = ngthreads - sgthreads;
             cur_sec = ns.getServerSecurityLevel(tserv); // do call again, maybe an other grow had finished
+            cur_mon = ns.getServerMoneyAvailable(tserv); // same as above, update it
             if (arg.debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: grow");
@@ -261,7 +262,7 @@ let use_servers = arg.include;
               ns.tprint(ssrv)
             }
             if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
-              if (cur_sec >= 60){
+              if (cur_sec >= 60 || cur_mon >= (max_mon*0.999)){
                 gsuccess = false // escape the grow, do some weaken before!
               }
               else if (threadPossible(ssrv, sgname) >= ngthreads) {
