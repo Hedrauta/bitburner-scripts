@@ -1,15 +1,18 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-  let use_servers = ["256TiB_1-0","256TiB_1","32TiB_1", "32TiB_2", "32TiB_3", "32TiB_4"]; 
-  // add servers hostname you want to use for running scripts on them, if you want only run on this one
-  let arg = ns.flags([
+  
+  let arg = ns.flags([ // options to add as a flag (--hack % , --use_home, --use_all_purchased , --use_non_owned , --ignore (special ussage) )
+    ['include', ["pserv-0","pserv-1"]], // add servers hostname you want to use for running scripts on them, if you want only run on this one
+    // also you can change the include by using "--include *hostname*"" for every server you want use as a script-server
     ['hack', 5], // hack-percentage of targets server money, run with argument "--hack *integer*" (>=1 && <=100)
-    ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run
+    ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run's argument
+    ['use_home', false], // include home-server as a script-server
     ['use_non_owned', false], // use non-owned, rooted server as script-server, to enable, run with "--use_non_owned"
-    ['use_all', false], // use of all purchased server (except ignored ones), to enable, run with "--use_all"
+    ['use_all_purchased', false], // use of all purchased server (except ignored ones), to enable, run with "--use_all_purchased"
+    // this will ignore --include
     ['debug', false]
 ]);
-
+let use_servers = arg.include;
   /* only enable with argument "--debug" if an alert occurs. Terminal will get spammed with alot of info, be sure max lenghts is high enough
    in debug, there will be several lines "spammed" in the terminal:
   > list of all script_servers process_list (idc the rest)
@@ -22,35 +25,39 @@ export async function main(ns) {
   */
 
   function upd_ussrvr() { // special function for special use
-  if ( arg.use_all ){
+  if ( arg.use_all_purchased ){
     // if true, use every purchased server (except home ofc)
     use_servers = ns.getPurchasedServers().filter(nsgf => arg.ignore.indexOf(nsgf) == -1)
+  }
+  if (arg.use_home) {
+    use_servers.push("home")
   }
   if (arg.use_non_owned) {
     nors().map(nm => use_servers.push(nm)) // nors is every non-owned rooted server, with ram >= 2GB. function is below
   }
+  return use_servers;
   }
-    upd_ussrvr();
   
-  let hperct = 5;
+  let script_servers = [];
+  function upd_ssrvr(){ // function for later use (if use_all_purchased_ps is set true)
+  script_servers = upd_ussrvr().map( us => { return { name: us, values: ns.getServer(us) } } );
+  }
+  upd_ssrvr(); // init call, because functions won't work for some reason 🤣
+
+
+  let hperct = 0.05;
   if (arg.hack >= 1 && arg.hack <= 100 ) {
-    hperct = arg.hack
+    hperct = arg.hack / 100
     // if there's a number set as first argument and in range, set hperct
   }
-  let script_servers = [];
-  function upd_ssrvr(){ // function for later use (if use_all_ps is set true)
-  script_servers = use_servers.map(us => { return { name: us } });
-  }
-  upd_ssrvr();
-
-
+  
   // functions
 
-  // get script_servers max and current ram
+  // get script_servers max and current ram (+ weaken-result for servers core)
   function update_RAM() {
     for (var ramsrv of script_servers) {
-      ramsrv.max_ram = ns.getServerMaxRam(ramsrv.name);
       ramsrv.cur_ram = ns.getServerUsedRam(ramsrv.name)
+      ramsrv.w_res = ns.weakenAnalyze(1, ramsrv.values.cpuCores)
     }
   };
   // start fetching all Servers (Credits to skytos#2092)
@@ -77,7 +84,7 @@ export async function main(ns) {
 
   // filter for non-owned servers
   function nos() {
-    let owned_servers = ["home", ns.getHostname()];
+    let owned_servers = ["home", ns.getHostname];
     ns.getPurchasedServers().map(gps => owned_servers.push(gps))
     return allServers(ns).filter(asf => ns.hasRootAccess(asf) && owned_servers.indexOf(asf) < 0)
   }
@@ -87,15 +94,15 @@ export async function main(ns) {
     return nos().filter(nf => ns.getServerMaxMoney(nf) > 0)
   }
 
-  // another filter, non-owned, with ram >= 2, for use_non_owned
+  // another filter, non-owned, with ram >= 2, for use in use_non_owned
   function nors() {
     return nos().filter(nf => ns.getServerMaxRam(nf) >= 2)
   }
   // calculate  process_lists used threads for specific script and arguments, return it for further calculation
-  function calculateThreads(sserv, script, arg) {
-    if (sserv.length > 0) {
-      return sserv.filter(sf => sf.filename.indexOf(script) != -1 && sf.args.indexOf(arg) !== -1)
-        .reduce((a, b) => a + b.threads, 0)
+  function calculateThreads(sservps, script, arg, sserv) {
+    if (sservps.length > 0) {
+      return sservps.filter(sf => sf.filename.indexOf(script) != -1 && sf.args.indexOf(arg) !== -1)
+        .reduce((a, b) => a + (b.threads * sserv.values.cpuCores), 0)
     }
     else { return 0 }
   }
@@ -113,7 +120,7 @@ export async function main(ns) {
       script_size = 1.7
     }
     update_RAM();
-    return Math.floor((sserv.max_ram - sserv.cur_ram) / script_size)
+    return Math.floor((sserv.values.maxRam - sserv.cur_ram) / script_size)
   }
   // execute script with threads (save some ram 😉)
   function start(script, host, threads, arg) {
@@ -129,14 +136,16 @@ export async function main(ns) {
   let swname = "/ctrl/weaken_server.script";
   let hname = "ctrl/hack_server.script";
   let shname = "/ctrl/hack_server.script";
-  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", sgname, ns.gethostname);
-  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", swname, ns.gethostname);
-  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", shname, ns.gethostname);
+  let cur_host = ns.getHostname();
+  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", sgname, cur_host);
+  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", swname, cur_host);
+  await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", shname, cur_host);
   async function copy_files(){
   for (var srvscp of script_servers) {
-    await ns.scp([sgname, swname, shname], ns.getHostname(), srvscp.name);
+    if (srvscp != cur_host){ // ignore current server for copy, bc scripts are already existent
+    await ns.scp([sgname, swname, shname], cur_host, srvscp.name);
     await ns.sleep(10)
-  }}
+  }}}
   await copy_files();
   // done copy ≡(▔﹏▔)≡
 
@@ -147,22 +156,24 @@ export async function main(ns) {
   ns.tprint("Values set on startup: \n Hacking " + hperct + "% of targets Server money.\nUse non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned);
   ns.tprint("Servers used for running scripts:");
   ns.tprint(use_servers)
-  ns.tprint("if --use_all is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
+  ns.tprint("if --use_all_purchased is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
   ns.tprint("Currently targetable Server (you can still nuke and they will be added later in run):");
   ns.tprint(nots());
-  ns.tprint("\n\n Starting GWHCTRL. Keep-alives will be send as toast (bottom right notification!")
-  await ns.sleep(1000)
-
-  // disable logging for certain functions (if debug is fals), i do spam them alot 😂
-  if (!arg.debug){
+  ns.tprint("\n\n Starting GWHCTRL on "+cur_host+" !! Keep-alives will be send as toast (bottom right notification!)")
+  
+  if (!arg.debug){ // disable logging for certain functions (if debug is false), i do spam them alot 😂
     ns.disableLog("getServerUsedRam");
     ns.disableLog("getServerMaxRam");
-    ns.disableLog("sleep")
+    ns.disableLog("sleep");
+    ns.disableLog("getServerMinSecurityLevel");
+    ns.disableLog("getServerSecurityLevel");
+    ns.disableLog("getServerMaxMoney");
+    ns.disableLog("getServerMoneyAvailable")
   }
   // Script-part (in loop)
   while (1) {
-    if (arg.use_all) {
-      upd_ussrvr();
+    if (arg.use_non_owned) {
+      upd_ussrvr(); // includes if --use_all_purchased is set
       upd_ssrvr();
       await copy_files();
       update_RAM();
@@ -174,17 +185,17 @@ export async function main(ns) {
       let g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
       let min_sec = ns.getServerMinSecurityLevel(tserv);
       let cur_sec = ns.getServerSecurityLevel(tserv);
-      let wst_multi = ns.weakenAnalyze(1);
       if (cur_sec > (min_sec * 1.05)) { // weaken the servers security-level to minimum (before grow)
-        let nwthreads = Math.ceil((cur_sec - min_sec) / wst_multi);
         let wsuccess = true;
         while (wsuccess) {
           for (const ssrv of script_servers) {
+            let nwthreads1c = Math.ceil((cur_sec - min_sec) / ssrv.w_res);
+            let nwthreadscc = nwthreads1c / ssrv.values.cpuCores
             update_process();
             update_RAM();
-            let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), swname, tserv);
+            let swthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), swname, tserv, ssrv);
             let cwprocsr = threadSameArg(ssrv.process_list, swname, tserv);
-            let mwthreads = nwthreads - swthreads;
+            let mwthreads = nwthreads1c - swthreads;
             if (arg.debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: weaken");
@@ -193,19 +204,20 @@ export async function main(ns) {
               ns.tprint("f threads: " + threadPossible(ssrv, swname));
               ns.tprint("s threads: " + swthreads);
               ns.tprint("c procsr: " + cwprocsr);
-              ns.tprint("n threads: " + nwthreads);
-              ns.tprint("tserv: " + tserv)
+              ns.tprint("n threads: " + nwthreads1c);
+              ns.tprint("tserv: " + tserv+"\n sserv: ");
+              ns.tprint(ssrv)
             }
-            if (nwthreads > 0 && mwthreads > 0 && !cwprocsr) {
-              if (threadPossible(ssrv, swname) >= nwthreads) {
-                start(wname, ssrv.name, nwthreads, tserv);
+            if (nwthreads1c > 0 && mwthreads > 0 && !cwprocsr) {
+              if (threadPossible(ssrv, swname) >= nwthreadscc) {
+                start(wname, ssrv.name, nwthreadscc, tserv);
                 wsuccess = false;
-                await ns.sleep(10) // all threads used, end loop for targetserver
+                await ns.sleep(1) // all threads used, end loop for targetserver
               }
-              else if (threadPossible(ssrv, swname) >= 1 && threadPossible(ssrv, swname) < nwthreads) {
+              else if (threadPossible(ssrv, swname) >= 1 && threadPossible(ssrv, swname) < nwthreadscc) {
                 start(wname, ssrv.name, threadPossible(ssrv, swname), tserv);
-                nwthreads -= threadPossible(ssrv, swname);
-                await ns.sleep(10)
+                nwthreads1c -= threadPossible(ssrv, swname);
+                await ns.sleep(1)
               }
               else if (threadPossible(ssrv, swname) == 0){
                 await ns.sleep(1)// skip the current ssrv bc no free threads
@@ -220,21 +232,22 @@ export async function main(ns) {
               await ns.sleep(1)// skip the current ssrv bc no free threads
             }
             else {
-              await ns.sleep(1000)
+              await ns.sleep(500)
             }
           }
         }
       }
       else if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for possible MaxMoney on the Server
-        let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
         let gsuccess = true;
         while (gsuccess) {
           for (const ssrv of script_servers) {
+            let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
             update_process();
             update_RAM();
-            let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv);
+            let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv, ssrv);
             let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv);
             let mgthreads = ngthreads - sgthreads;
+            cur_sec = ns.getServerSecurityLevel(tserv); // do call again, maybe an other grow had finished
             if (arg.debug) {
               ns.tprint(script_servers.map(sm => sm.process_list));
               ns.tprint("action: grow");
@@ -243,16 +256,18 @@ export async function main(ns) {
               ns.tprint("f threads: " + threadPossible(ssrv, sgname));
               ns.tprint("s threads: " + sgthreads);
               ns.tprint("c procsr: " + cgprocsr);
-              ns.tprint("n threads: " + ngthreads)
+              ns.tprint("n threads: " + ngthreads);
+              ns.tprint("tserv: " + tserv+"\n sserv: ");
+              ns.tprint(ssrv)
             }
             if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
-              if (cur_sec == 100){
+              if (cur_sec >= 60){
                 gsuccess = false // escape the grow, do some weaken before!
               }
               else if (threadPossible(ssrv, sgname) >= ngthreads) {
                 start(gname, ssrv.name, ngthreads, tserv);
                 gsuccess = false;
-                await ns.sleep(10)
+                await ns.sleep(1)
               }
               else if (threadPossible(ssrv, sgname) >= 1 && threadPossible(ssrv, sgname) < ngthreads) {
                 start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv);
@@ -269,23 +284,23 @@ export async function main(ns) {
             }
             else if (mgthreads <= 0) {
               gsuccess = false;
-              await ns.sleep(10) // skip that targetserver
+              await ns.sleep(1) // skip that targetserver
             }
             else {
-              await ns.sleep(1000)
+              await ns.sleep(500)
             }
           }
         }
       }
       else { // run hack, bc security is lowered and money is at max
         let hsuccess = true;
-        let nhthreads = ns.hackAnalyzeThreads(tserv, (cur_mon * hperct / 100));
         while (hsuccess) {
           for (const ssrv of script_servers) {
+            let nhthreads = ns.hackAnalyzeThreads(tserv, (cur_mon * hperct));
             update_process();
             update_RAM();
-            // some hackmath!
-            let shthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), shname, tserv);
+            // magic hackmath!
+            let shthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), shname, tserv, ssrv);
             let chprocsr = threadSameArg(ssrv.process_list, shname, tserv);
             let mhthreads = nhthreads - shthreads;
             if (arg.debug) {
@@ -297,7 +312,8 @@ export async function main(ns) {
               ns.tprint("s threads: " + shthreads);
               ns.tprint("c procsr: " + chprocsr);
               ns.tprint("n threads: " + nhthreads);
-              ns.tprint("tserv: " + tserv)
+              ns.tprint("tserv: " + tserv+"\n sserv: ");
+              ns.tprint(ssrv)
             }
             if (nhthreads > 0 && mhthreads > 0 && !chprocsr) {
               if (threadPossible(ssrv, shname) >= nhthreads) {
@@ -329,7 +345,7 @@ export async function main(ns) {
         }
       }
     };
-    await ns.sleep(15000)
+    await ns.sleep(10000); // wait 10 secs, before go through nots() again 😉
     ns.toast("GWHCtrl: Still alive!")
   }
 }
