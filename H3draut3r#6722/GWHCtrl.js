@@ -153,7 +153,7 @@ let use_servers = arg.include;
   update_process();
 
   ns.tprint("Starting automatic Grow/Weaken/Hack");
-  ns.tprint("Values set on startup: \n Hacking " + hperct + "% of targets Server money.\nUse non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned);
+  ns.tprint("Values set on startup: \n Hacking " + arg.hack + "% of targets Server money.\nUse non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned);
   ns.tprint("Servers used for running scripts:");
   ns.tprint(use_servers)
   ns.tprint("if --use_all_purchased is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
