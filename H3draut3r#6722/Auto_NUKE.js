@@ -45,42 +45,36 @@ export async function main(ns) {
                 if (nhlvl <= curhlvl()) { // if needed hacklevel smaller or equals current hacklevel
                     if (nports >= 1 && progs().indexOf(pr[0]) >= 0 && !info.sshPortOpen) { 
                         ns.brutessh(server); 
-                        ns.print("BruteSSH successful at "+server);
                         nports-- 
                     }
                     else if(info.sshPortOpen){nports--}
                     
                     if (nports >= 1 && progs().indexOf(pr[1]) >= 0 && !info.ftpPortOpen) { 
                         ns.ftpcrack(server); 
-                        ns.print("FTPCrack sucessfull at "+server);
                         nports-- 
                     }
                     else if(info.ftpPortOpen){nports--}
                     
                     if (nports >= 1 && progs().indexOf(pr[2]) >= 0 && !info.httpPortOpen) { 
                         ns.httpworm(server); 
-                        ns.print("HttpWorm sucessfull at "+server);
                         nports-- 
                     }
                     else if(info.httpPortOpen){nports--}
                     
                     if (nports >= 1 && progs().indexOf(pr[3]) >= 0 && !info.sqlPortOpen) { 
                         ns.sqlinject(server);
-                        ns.print("SQLInject sucessfull at "+server);
                         nports--
                     }
                     else if(info.sqlPortOpen){nports--}
                     
                     if (nports >= 1 && progs().indexOf(pr[4]) >= 0 && !info.smtpPortOpen) { 
                         ns.relaysmtp(server);
-                        ns.print("relaySMTP sucessfull at "+server);
                         nports-- 
                     }
                     else if(info.smtpPortOpen){nports--}
                     
                     if (nports <= 0) {
-                        ns.nuke(server); //if not owning the necessary apps or did not open enough ports, it will retry next loop
-                        ns.print("Nuked "+server)
+                        ns.nuke(server) //if not owning the necessary apps or did not open enough ports, it will retry next loop
                     }
                     
                     await ns.sleep(1) // because!
