@@ -79,7 +79,7 @@ export async function main(ns) {
                     else if(info.smtpPortOpen){nports--}
                     
                     if (nports <= 0) {
-                        ns.nuke(server) //if not owning the necessary apps or did not open enough ports, it will retry next loop
+                        ns.nuke(server); //if not owning the necessary apps or did not open enough ports, it will retry next loop
                         ns.print("Nuked "+server)
                     }
                     
