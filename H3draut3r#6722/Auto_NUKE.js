@@ -52,25 +52,28 @@ export async function main(ns) {
                     
                     if (nports >= 1 && progs().indexOf(pr[1]) >= 0 && !info.ftpPortOpen) { 
                         ns.ftpcrack(server); 
-                        ns.print();
+                        ns.print("FTPCrack sucessfull at "+server);
                         nports-- 
                     }
                     else if(info.ftpPortOpen){nports--}
                     
                     if (nports >= 1 && progs().indexOf(pr[2]) >= 0 && !info.httpPortOpen) { 
                         ns.httpworm(server); 
+                        ns.print("HttpWorm sucessfull at "+server);
                         nports-- 
                     }
                     else if(info.httpPortOpen){nports--}
                     
                     if (nports >= 1 && progs().indexOf(pr[3]) >= 0 && !info.sqlPortOpen) { 
-                        ns.sqlinject(server); 
+                        ns.sqlinject(server);
+                        ns.print("SQLInject sucessfull at "+server);
                         nports--
                     }
                     else if(info.sqlPortOpen){nports--}
                     
                     if (nports >= 1 && progs().indexOf(pr[4]) >= 0 && !info.smtpPortOpen) { 
-                        ns.relaysmtp(server); 
+                        ns.relaysmtp(server);
+                        ns.print("relaySMTP sucessfull at "+server);
                         nports-- 
                     }
                     else if(info.smtpPortOpen){nports--}
