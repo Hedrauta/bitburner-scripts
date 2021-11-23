@@ -2,13 +2,13 @@
 export async function main(ns) {
   
   let arg = ns.flags([ // options to add as a flag (--hack % , --use_home, --use_all_purchased , --use_non_owned , --ignore (special ussage) )
-    ['include', ["pserv-0","pserv-1"]], // add servers hostname you want to use for running scripts on them, if you want only run on this one
+    ['include', []], // add servers hostname you want to use for running scripts on them, if you want only run on this one
     // also you can change the include by using "--include *hostname*"" for every server you want use as a script-server
     ['hack', 5], // hack-percentage of targets server money, run with argument "--hack *integer*" (>=1 && <=100)
     ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run's argument
-    ['use_home', false], // include home-server as a script-server
-    ['use_non_owned', false], // use non-owned, rooted server as script-server, to enable, run with "--use_non_owned"
-    ['use_all_purchased', false], // use of all purchased server (except ignored ones), to enable, run with "--use_all_purchased"
+    ['use_home', true], // include home-server as a script-server
+    ['use_non_owned', true], // use non-owned, rooted server as script-server, to enable, run with "--use_non_owned"
+    ['use_all_purchased', true], // use of all purchased server (except ignored ones), to enable, run with "--use_all_purchased"
     // this will ignore --include
     ['debug', false]
 ]);
