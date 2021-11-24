@@ -1,6 +1,6 @@
 /** @param {NS} ns **/
 export async function main(ns) {
-  
+
   let arg = ns.flags([ // options to add as a flag (--hack % , --use_home, --use_all_purchased , --use_non_owned , --ignore (special ussage) )
     ['include', []], // add servers hostname you want to use for running scripts on them, if you want only run on this one
     // also you can change the include by using "--include *hostname*"" for every server you want use as a script-server
@@ -11,8 +11,8 @@ export async function main(ns) {
     ['use_all_purchased', true], // use of all purchased server (except ignored ones), to enable, run with "--use_all_purchased"
     // this will ignore --include
     ['debug', false]
-]);
-let use_servers = arg.include;
+  ]);
+  let use_servers = arg.include;
   /* only enable with argument "--debug" if an alert occurs. Terminal will get spammed with alot of info, be sure max lenghts is high enough
    in debug, there will be several lines "spammed" in the terminal:
   > list of all script_servers process_list (idc the rest)
@@ -25,32 +25,32 @@ let use_servers = arg.include;
   */
 
   function upd_ussrvr() { // special function for special use
-  if ( arg.use_all_purchased ){
-    // if true, use every purchased server (except home ofc)
-    use_servers = ns.getPurchasedServers().filter(nsgf => arg.ignore.indexOf(nsgf) == -1)
+    if (arg.use_all_purchased) {
+      // if true, use every purchased server (except home ofc)
+      use_servers = ns.getPurchasedServers().filter(nsgf => arg.ignore.indexOf(nsgf) == -1)
+    }
+    if (arg.use_home) {
+      use_servers.push("home")
+    }
+    if (arg.use_non_owned) {
+      nors().map(nm => use_servers.push(nm)) // nors is every non-owned rooted server, with ram >= 2GB. function is below
+    }
+    return use_servers;
   }
-  if (arg.use_home) {
-    use_servers.push("home")
-  }
-  if (arg.use_non_owned) {
-    nors().map(nm => use_servers.push(nm)) // nors is every non-owned rooted server, with ram >= 2GB. function is below
-  }
-  return use_servers;
-  }
-  
+
   let script_servers = [];
-  function upd_ssrvr(){ // function for later use (if use_all_purchased_ps is set true)
-  script_servers = upd_ussrvr().map( us => { return { name: us, values: ns.getServer(us) } } );
+  function upd_ssrvr() { // function for later use (if use_all_purchased_ps is set true)
+    script_servers = upd_ussrvr().map(us => { return { name: us, values: ns.getServer(us) } });
   }
   upd_ssrvr(); // init call, because functions won't work for some reason 🤣
 
 
   let hperct = 0.05;
-  if (arg.hack >= 1 && arg.hack <= 100 ) {
+  if (arg.hack >= 1 && arg.hack <= 100) {
     hperct = arg.hack / 100
     // if there's a number set as first argument and in range, set hperct
   }
-  
+
   // functions
 
   // get script_servers max and current ram (+ weaken-result for servers core)
@@ -140,12 +140,14 @@ let use_servers = arg.include;
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", sgname, cur_host);
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", swname, cur_host);
   await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", shname, cur_host);
-  async function copy_files(){
-  for (var srvscp of script_servers) {
-    if (srvscp != cur_host){ // ignore current server for copy, bc scripts are already existent
-    await ns.scp([sgname, swname, shname], cur_host, srvscp.name);
-    await ns.sleep(10)
-  }}}
+  async function copy_files() {
+    for (var srvscp of script_servers) {
+      if (srvscp != cur_host) { // ignore current server for copy, bc scripts are already existent
+        await ns.scp([sgname, swname, shname], cur_host, srvscp.name);
+        await ns.sleep(10)
+      }
+    }
+  }
   await copy_files();
   // done copy ≡(▔﹏▔)≡
 
@@ -159,9 +161,9 @@ let use_servers = arg.include;
   ns.tprint("if --use_all_purchased is set, list will grow for every purchased server afterwards, except --ignore ones (read first lines for instruction) ");
   ns.tprint("Currently targetable Server (you can still nuke and they will be added later in run):");
   ns.tprint(nots());
-  ns.tprint("\n\n Starting GWHCTRL on "+cur_host+" !! Keep-alives will be send as toast (bottom right notification!)")
-  
-  if (!arg.debug){ // disable logging for certain functions (if debug is false), i do spam them alot 😂
+  ns.tprint("\n\n Starting GWHCTRL on " + cur_host + " !! Keep-alives will be send as toast (bottom right notification!)")
+
+  if (!arg.debug) { // disable logging for certain functions (if debug is false), i do spam them alot 😂
     ns.disableLog("getServerUsedRam");
     ns.disableLog("getServerMaxRam");
     ns.disableLog("sleep");
@@ -205,7 +207,7 @@ let use_servers = arg.include;
               ns.tprint("s threads: " + swthreads);
               ns.tprint("c procsr: " + cwprocsr);
               ns.tprint("n threads: " + nwthreads1c);
-              ns.tprint("tserv: " + tserv+"\n sserv: ");
+              ns.tprint("tserv: " + tserv + "\n sserv: ");
               ns.tprint(ssrv)
             }
             if (nwthreads1c > 0 && mwthreads > 0 && !cwprocsr) {
@@ -219,7 +221,7 @@ let use_servers = arg.include;
                 nwthreads1c -= threadPossible(ssrv, swname);
                 await ns.sleep(1)
               }
-              else if (threadPossible(ssrv, swname) == 0){
+              else if (threadPossible(ssrv, swname) == 0) {
                 await ns.sleep(1)// skip the current ssrv bc no free threads
               }
               else {
@@ -241,7 +243,7 @@ let use_servers = arg.include;
         let gsuccess = true;
         while (gsuccess) {
           for (const ssrv of script_servers) {
-            let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi));
+            let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi, ssrv.cpuCores));
             update_process();
             update_RAM();
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv, ssrv);
@@ -258,11 +260,11 @@ let use_servers = arg.include;
               ns.tprint("s threads: " + sgthreads);
               ns.tprint("c procsr: " + cgprocsr);
               ns.tprint("n threads: " + ngthreads);
-              ns.tprint("tserv: " + tserv+"\n sserv: ");
+              ns.tprint("tserv: " + tserv + "\n sserv: ");
               ns.tprint(ssrv)
             }
             if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
-              if (cur_sec >= 60 || cur_mon >= (max_mon*0.999)){
+              if (cur_sec >= 60 || cur_mon >= (max_mon * 0.999)) {
                 gsuccess = false // escape the grow, do some weaken before!
               }
               else if (threadPossible(ssrv, sgname) >= ngthreads) {
@@ -275,7 +277,7 @@ let use_servers = arg.include;
                 ngthreads -= threadPossible(ssrv, sgname);
                 await ns.sleep(10)
               }
-              else if (threadPossible(ssrv, sgname) == 0){
+              else if (threadPossible(ssrv, sgname) == 0) {
                 await ns.sleep(1)// skip the current ssrv bc no free threads
               }
               else {
@@ -297,7 +299,7 @@ let use_servers = arg.include;
         let hsuccess = true;
         while (hsuccess) {
           for (const ssrv of script_servers) {
-            let nhthreads = ns.hackAnalyzeThreads(tserv, (cur_mon * hperct));
+            let nhthreads = Math.ceil(ns.hackAnalyzeThreads(tserv, (cur_mon * hperct)));
             update_process();
             update_RAM();
             // magic hackmath!
@@ -313,7 +315,7 @@ let use_servers = arg.include;
               ns.tprint("s threads: " + shthreads);
               ns.tprint("c procsr: " + chprocsr);
               ns.tprint("n threads: " + nhthreads);
-              ns.tprint("tserv: " + tserv+"\n sserv: ");
+              ns.tprint("tserv: " + tserv + "\n sserv: ");
               ns.tprint(ssrv)
             }
             if (nhthreads > 0 && mhthreads > 0 && !chprocsr) {
@@ -327,7 +329,7 @@ let use_servers = arg.include;
                 nhthreads -= threadPossible(ssrv, shname)
                 await ns.sleep(10)
               }
-              else if (threadPossible(ssrv, shname) == 0){
+              else if (threadPossible(ssrv, shname) == 0) {
                 await ns.sleep(1)// skip the current ssrv bc no free threads
               }
               else {
