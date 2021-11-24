@@ -191,7 +191,7 @@ export async function main(ns) {
         let wsuccess = true;
         while (wsuccess) {
           for (const ssrv of script_servers) {
-            let nwthreads1c = Math.ceil(((cur_sec - min_sec) / ssrv.w_res) * ssrv.cpuCores); // Single-core, needed threads
+            let nwthreads1c = Math.ceil(((cur_sec - min_sec) / ssrv.w_res) * ssrv.values.cpuCores); // Single-core, needed threads
             let nwthreadscc = Math.ceil((cur_sec - min_sec) / ssrv.w_res); // (if multi-core, otherwise it's the same as single)
             update_process();
             update_RAM();
@@ -243,7 +243,7 @@ export async function main(ns) {
         let gsuccess = true;
         while (gsuccess) {
           for (const ssrv of script_servers) {
-            let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi, ssrv.cpuCores));
+            let ngthreads = Math.ceil(ns.growthAnalyze(tserv, g_multi, ssrv.values.cpuCores));
             update_process();
             update_RAM();
             let sgthreads = calculateThreads(script_servers.map(sm => sm.process_list).flat(), sgname, tserv, ssrv);
