@@ -105,15 +105,23 @@ export async function main(ns) {
   function nors() {
     return nos().filter(nf => ns.getServerMaxRam(nf) >= 2)
   }
+
   // calculate  process_lists used threads for specific script and arguments, return it for further calculation
   function calculateThreads(sservps, script, arg) {
-    var sser_m = sservps.flatMap(sm => sm.process_list);
-    if (sser_m.length > 0) {
-      return sser_m.filter(sf => sf.filename.indexOf(script) != -1 && sf.args.indexOf(arg) !== -1)
-        .reduce((a, b) => a + b.threads, 0)
+    let cTc = 0;
+    for (let srv of sservps) {
+      let sp = srv.process_list;
+      let sv = srv.values;
+      if(sp.length > 0) {
+        let ctThreads = sp.filter(spf => spf.filename.indexOf(script) != -1 && spf.args.indexOf(arg) != -1)
+          .reduce((a, b) => a + b.threads, 0);
+          ctThreads /= (1 + ((sv.cpuCores - 1) / 16));
+        cTc += ctThreads
+      }
     }
-    else { return 0 }
+    return cTc
   }
+
   // check, if any process with same argument is running
   function threadSameArg(sserv, script, arg) {
     if (sserv.length > 0) {
@@ -197,25 +205,20 @@ export async function main(ns) {
       update_process()
     }
     for (const tserv of nots()) {
-      // first of fetching data
-      let cur_mon = tserv.values.moneyAvailable;
-      let max_mon = tserv.values.moneyMax * gperct;
-      let g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
-      let cur_sec = tserv.values.hackDifficulty;
-      let min_sec = tserv.values.minDifficulty
-      let grow_sec = 0;
-      if (wcount > 0) {
-        let sgthreads = calculateThreads(script_servers, sgname, tserv.name);
-        grow_sec = ns.growthAnalyzeSecurity(sgthreads);
-      }
-      // run a few if's
-      if ((cur_sec + grow_sec) > min_sec) { // weaken the servers security-level to minimum (before grow)
-        for (const ssrv of script_servers) {
+      // first of fetching data (alot)
+      let cur_mon   = tserv.values.moneyAvailable;
+      let max_mon   = tserv.values.moneyMax * gperct;
+      let g_multi   = Math.ceil(max_mon / (cur_mon + 0.001));
+      let cur_sec   = tserv.values.hackDifficulty;
+      let min_sec   = tserv.values.minDifficulty
+      let grow_sec  = 0;
+      let sgt       = calculateThreads(script_servers, sgname, tserv.name);
+      let swt       = calculateThreads(script_servers, swname, tserv.name);
+      if (sgt > 0) { grow_sec = ns.growthAnalyzeSecurity(sgt)};
+
           cur_sec = ns.getServerSecurityLevel(tserv.name); // re-update security (maybe a script on another server has finised)
-          let nwthreads1c = Math.ceil(((cur_sec - min_sec) / ssrv.w_res) * ssrv.values.cpuCores); // Single-core, needed threads
           var time_update = times.filter(tf => tf.name == tserv.name)
-          time_update.gstart = Date.now();
-          time_update.havail = false; let nwthreadscc = Math.ceil((cur_sec - min_sec) / ssrv.w_res); // (if multi-core, otherwise it's the same as single)
+          time_update.havail = false
           update_process();
           update_RAM();
           let swthreads = calculateThreads(script_servers, swname, tserv.name);
