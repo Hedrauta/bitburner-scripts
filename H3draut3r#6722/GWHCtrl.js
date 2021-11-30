@@ -242,7 +242,6 @@ export async function main(ns) {
               time_update.wstart = Date.now();
               time_update.havail = true;
               ssrv.process_list.wstart = Date.now();
-              wsuccess = false;
               await ns.sleep(1) // all threads used, end loop for targetserver
             }
             else if (threadPossible(ssrv, swname) >= 1 && threadPossible(ssrv, swname) < nwthreadscc) {
@@ -266,7 +265,6 @@ export async function main(ns) {
             }
           }
           else if (mwthreads <= 0) {
-            wsuccess = false;
             await ns.sleep(1)// skip the current ssrv bc no free threads
           }
           else {
@@ -309,7 +307,6 @@ export async function main(ns) {
               time_update.havail = false;
               ns.print("exec grow, arg " + tserv.name + ", threads " + ngthreads + ", @ " + ssrv.name);
               ssrv.process_list.wstart = Date.now();
-              gsuccess = false;
               await ns.sleep(20)
             }
             else if (threadPossible(ssrv, sgname) >= 1 && threadPossible(ssrv, sgname) < ngthreads) {
@@ -332,7 +329,6 @@ export async function main(ns) {
             }
           }
           else if (mgthreads <= 0) {
-            gsuccess = false;
             await ns.sleep(1) // skip that targetserver
           }
           else {
@@ -368,7 +364,6 @@ export async function main(ns) {
             if (threadPossible(ssrv, shname) >= nhthreads) {
               start(hname, ssrv.name, nhthreads, tserv.name);
               ns.print("exec hack, arg " + tserv.name + ", threads " + nhthreads + ", @ " + ssrv.name);
-              hsuccess = false;
               await ns.sleep(1)
             }
             else if (threadPossible(ssrv, shname) >= 1 && threadPossible(ssrv, shname) < nhthreads) {
@@ -389,7 +384,6 @@ export async function main(ns) {
             }
           }
           else if (mhthreads <= 0) {
-            hsuccess = false;
             await ns.sleep(1) // skip that targetserver
           }
           else {
