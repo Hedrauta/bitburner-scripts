@@ -4,7 +4,7 @@ export async function main(ns) {
 
 
   let arg = ns.flags([ // options to add as a flag (--hack % , --use_home, --use_all_purchased , --use_non_owned , --ignore (special ussage) )
-    ['hack', 5], // hack-percentage of targets server money, run with argument "--hack *integer*" (>=1 && <=100)
+    ['hack', 1], // hack-percentage of targets server money, run with argument "--hack *integer*" (>=1 && <=100)
     ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run's argument
     ['use_home', false], // include home-server as a script-server
     ['use_non_owned', false], // use non-owned, rooted server as script-server, to enable, run with "--use_non_owned"
@@ -36,7 +36,7 @@ export async function main(ns) {
   function upd_ussrvr() { // special function for special use
     if (arg.use_all_purchased) {
       // if true, use every purchased server (except home ofc)
-      use_servers = ns.getPurchasedServers().filter(nsgf => arg.ignore.indexOf(nsgf) == -1)
+      use_servers = ns.getPurchasedServers().filter(ngf => arg.ignore.indexOf(ngf) == -1)
     }
     if (arg.use_home) {
       use_servers.push("home")
@@ -210,139 +210,133 @@ export async function main(ns) {
       }
       // run a few if's
       if ((cur_sec + grow_sec) > min_sec) { // weaken the servers security-level to minimum (before grow)
-        let wsuccess = true;
-        while (wsuccess) {
-          for (const ssrv of script_servers) {
-            cur_sec = ns.getServerSecurityLevel(tserv.name); // re-update security (maybe a script on another server has finised)
-            let nwthreads1c = Math.ceil(((cur_sec - min_sec) / ssrv.w_res) * ssrv.values.cpuCores); // Single-core, needed threads
-            var time_update = times.filter(tf => tf.name == tserv.name)
-            time_update.gstart = Date.now();
-            time_update.havail = false; let nwthreadscc = Math.ceil((cur_sec - min_sec) / ssrv.w_res); // (if multi-core, otherwise it's the same as single)
-            update_process();
-            update_RAM();
-            let swthreads = calculateThreads(script_servers, swname, tserv.name);
-            let cwprocsr = threadSameArg(ssrv.process_list, swname, tserv.name);
-            let mwthreads = nwthreads1c - swthreads;
-            if (arg.debug) {
-              ns.tprint(script_servers.map(sm => sm.process_list));
-              ns.tprint("action: weaken");
-              ns.tprint("ssrv: " + ssrv.name);
-              ns.tprint("tserv: " + tserv.name);
-              ns.tprint("f threads: " + threadPossible(ssrv, swname));
-              ns.tprint("s threads: " + swthreads);
-              ns.tprint("c procsr: " + cwprocsr);
-              ns.tprint("n threads: " + nwthreads1c);
-              ns.tprint("tserv: " + tserv + "  Cur_sec: " + cur_sec + " Min_sec: " + min_sec + " Wres: " + ssrv.w_res);
-              ns.tprint("ssrv-data:  ");
-              ns.tprint(ssrv)
-            }
-            if (nwthreads1c > 0 && mwthreads > 0 && !cwprocsr) {
-              if (threadPossible(ssrv, swname) >= nwthreadscc) {
-                start(wname, ssrv.name, nwthreadscc, tserv.name);
-                ns.print("exec weaken, arg " + tserv.name + ", threads " + nwthreadscc + ", @ " + ssrv.name);
-                var time_update = times.filter(tf => tf.name == tserv.name)
-                time_update.wstart = Date.now();
-                time_update.havail = true;
-                ssrv.process_list.wstart = Date.now();
-                wsuccess = false;
-                await ns.sleep(1) // all threads used, end loop for targetserver
-              }
-              else if (threadPossible(ssrv, swname) >= 1 && threadPossible(ssrv, swname) < nwthreadscc) {
-                var threads_cache = threadPossible(ssrv, swname);
-                start(wname, ssrv.name, threadPossible(ssrv, swname), tserv.name);
-                var time_update = times.filter(tf => tf.name == tserv.name)
-                time_update.wstart = Date.now();
-                time_update.havail = true;
-                nwthreads1c -= threadPossible(ssrv, swname);
-                update_process();
-                var sswthreads = calculateThreads(script_servers, swname, tserv.name);
-                ns.print("exec weaken, arg " + tserv.name + ", threads " + threads_cache + ", left: " + (nwthreads1c - sswthreads) + ", @ " + ssrv.name);
-                await ns.sleep(1)
-              }
-              else if (threadPossible(ssrv, swname) == 0) {
-                await ns.sleep(1)// skip the current ssrv bc no free threads
-              }
-              else {
-                ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
-                ns.exit()
-              }
-            }
-            else if (mwthreads <= 0) {
+        for (const ssrv of script_servers) {
+          cur_sec = ns.getServerSecurityLevel(tserv.name); // re-update security (maybe a script on another server has finised)
+          let nwthreads1c = Math.ceil(((cur_sec - min_sec) / ssrv.w_res) * ssrv.values.cpuCores); // Single-core, needed threads
+          var time_update = times.filter(tf => tf.name == tserv.name)
+          time_update.gstart = Date.now();
+          time_update.havail = false; let nwthreadscc = Math.ceil((cur_sec - min_sec) / ssrv.w_res); // (if multi-core, otherwise it's the same as single)
+          update_process();
+          update_RAM();
+          let swthreads = calculateThreads(script_servers, swname, tserv.name);
+          let cwprocsr = threadSameArg(ssrv.process_list, swname, tserv.name);
+          let mwthreads = nwthreads1c - swthreads;
+          if (arg.debug) {
+            ns.tprint(script_servers.map(sm => sm.process_list));
+            ns.tprint("action: weaken");
+            ns.tprint("ssrv: " + ssrv.name);
+            ns.tprint("tserv: " + tserv.name);
+            ns.tprint("f threads: " + threadPossible(ssrv, swname));
+            ns.tprint("s threads: " + swthreads);
+            ns.tprint("c procsr: " + cwprocsr);
+            ns.tprint("n threads: " + nwthreads1c);
+            ns.tprint("tserv: " + tserv + "  Cur_sec: " + cur_sec + " Min_sec: " + min_sec + " Wres: " + ssrv.w_res);
+            ns.tprint("ssrv-data:  ");
+            ns.tprint(ssrv)
+          }
+          if (nwthreads1c > 0 && mwthreads > 0 && !cwprocsr) {
+            if (threadPossible(ssrv, swname) >= nwthreadscc) {
+              start(wname, ssrv.name, nwthreadscc, tserv.name);
+              ns.print("exec weaken, arg " + tserv.name + ", threads " + nwthreadscc + ", @ " + ssrv.name);
+              var time_update = times.filter(tf => tf.name == tserv.name)
+              time_update.wstart = Date.now();
+              time_update.havail = true;
+              ssrv.process_list.wstart = Date.now();
               wsuccess = false;
+              await ns.sleep(1) // all threads used, end loop for targetserver
+            }
+            else if (threadPossible(ssrv, swname) >= 1 && threadPossible(ssrv, swname) < nwthreadscc) {
+              var threads_cache = threadPossible(ssrv, swname);
+              start(wname, ssrv.name, threadPossible(ssrv, swname), tserv.name);
+              var time_update = times.filter(tf => tf.name == tserv.name)
+              time_update.wstart = Date.now();
+              time_update.havail = true;
+              nwthreads1c -= threadPossible(ssrv, swname);
+              update_process();
+              var sswthreads = calculateThreads(script_servers, swname, tserv.name);
+              ns.print("exec weaken, arg " + tserv.name + ", threads " + threads_cache + ", left: " + (nwthreads1c - sswthreads) + ", @ " + ssrv.name);
+              await ns.sleep(1)
+            }
+            else if (threadPossible(ssrv, swname) <= 0) {
               await ns.sleep(1)// skip the current ssrv bc no free threads
             }
             else {
-              await ns.sleep(500)
+              ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
+              ns.exit()
             }
+          }
+          else if (mwthreads <= 0) {
+            wsuccess = false;
+            await ns.sleep(1)// skip the current ssrv bc no free threads
+          }
+          else {
+            await ns.sleep(1)
           }
         }
       }
       else if (max_mon * 0.99 >= cur_mon) { // grow with enough threads for possible MaxMoney on the Server
-        let gsuccess = true;
-        while (gsuccess) {
-          for (const ssrv of script_servers) {
-            cur_mon = ns.getServerMoneyAvailable(tserv.name); // recall on every script-server
-            g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
-            cur_sec = ns.getServerSecurityLevel(tserv.name); // do call again, maybe an other grow had finished
-            let ngthreads1c = Math.ceil(ns.growthAnalyze(tserv.name, g_multi, 1));
-            let ngthreads = Math.ceil(ngthreads1c / ssrv.values.cpuCores);
-            update_process();
-            update_RAM();
-            let sgthreads = calculateThreads(script_servers, sgname, tserv.name);
-            let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv.name);
-            let mgthreads = ngthreads1c - sgthreads;
-            if (arg.debug) {
-              ns.tprint(script_servers.map(sm => sm.process_list));
-              ns.tprint("action: grow");
-              ns.tprint("ssrv: " + ssrv.name);
-              ns.tprint("tserv: " + tserv.name);
-              ns.tprint("f threads: " + threadPossible(ssrv, sgname));
-              ns.tprint("s threads: " + sgthreads);
-              ns.tprint("c procsr: " + cgprocsr);
-              ns.tprint("n threads: " + ngthreads);
-              ns.tprint("tserv: " + tserv.name + "  Cur_mon: " + cur_mon + " Max_mon: " + max_mon + " Cur_sec: " + cur_sec);
-              ns.tprint("ssrv-data:  ");
-              ns.tprint(ssrv)
+        for (const ssrv of script_servers) {
+          cur_mon = ns.getServerMoneyAvailable(tserv.name); // recall on every script-server
+          g_multi = Math.ceil(max_mon / (cur_mon + 0.001));
+          cur_sec = ns.getServerSecurityLevel(tserv.name); // do call again, maybe an other grow had finished
+          let ngthreads1c = Math.ceil(ns.growthAnalyze(tserv.name, g_multi, 1));
+          let ngthreads = Math.ceil(ngthreads1c / ssrv.values.cpuCores);
+          update_process();
+          update_RAM();
+          let sgthreads = calculateThreads(script_servers, sgname, tserv.name);
+          let cgprocsr = threadSameArg(ssrv.process_list, sgname, tserv.name);
+          let mgthreads = ngthreads1c - sgthreads;
+          if (arg.debug) {
+            ns.tprint(script_servers.map(sm => sm.process_list));
+            ns.tprint("action: grow");
+            ns.tprint("ssrv: " + ssrv.name);
+            ns.tprint("tserv: " + tserv.name);
+            ns.tprint("f threads: " + threadPossible(ssrv, sgname));
+            ns.tprint("s threads: " + sgthreads);
+            ns.tprint("c procsr: " + cgprocsr);
+            ns.tprint("n threads: " + ngthreads);
+            ns.tprint("tserv: " + tserv.name + "  Cur_mon: " + cur_mon + " Max_mon: " + max_mon + " Cur_sec: " + cur_sec);
+            ns.tprint("ssrv-data:  ");
+            ns.tprint(ssrv)
+          }
+          if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
+            if (cur_sec >= 60 || cur_mon >= (max_mon * 0.999)) {
+              gsuccess = false // escape the grow, do some weaken before!
             }
-            if (ngthreads > 0 && mgthreads > 0 && !cgprocsr) {
-              if (cur_sec >= 60 || cur_mon >= (max_mon * 0.999)) {
-                gsuccess = false // escape the grow, do some weaken before!
-              }
-              else if (threadPossible(ssrv, sgname) >= ngthreads) {
-                start(gname, ssrv.name, ngthreads, tserv.name);
-                var time_update = times.filter(tf => tf.name == tserv.name)
-                time_update.havail = false;
-                ns.print("exec grow, arg " + tserv.name + ", threads " + ngthreads + ", @ " + ssrv.name);
-                ssrv.process_list.wstart = Date.now();
-                gsuccess = false;
-                await ns.sleep(20)
-              }
-              else if (threadPossible(ssrv, sgname) >= 1 && threadPossible(ssrv, sgname) < ngthreads) {
-                var threads_cache = threadPossible(ssrv, sgname);
-                start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv.name);
-                var time_update = times.filter(tf => tf.name == tserv.name)
-                time_update.havail = false;
-                ngthreads -= threadPossible(ssrv, sgname);
-                update_process();
-                var ssgthreads = calculateThreads(script_servers, sgname, tserv.name);
-                ns.print("exec grow, arg " + tserv.name + ", threads " + threads_cache + ", left: " + (ngthreads1c - ssgthreads) + ", @ " + ssrv.name);
-                await ns.sleep(20)
-              }
-              else if (threadPossible(ssrv, sgname) == 0) {
-                await ns.sleep(1)// skip the current ssrv bc no free threads
-              }
-              else {
-                ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
-                ns.exit()
-              }
-            }
-            else if (mgthreads <= 0) {
+            else if (threadPossible(ssrv, sgname) >= ngthreads) {
+              start(gname, ssrv.name, ngthreads, tserv.name);
+              var time_update = times.filter(tf => tf.name == tserv.name)
+              time_update.havail = false;
+              ns.print("exec grow, arg " + tserv.name + ", threads " + ngthreads + ", @ " + ssrv.name);
+              ssrv.process_list.wstart = Date.now();
               gsuccess = false;
-              await ns.sleep(1) // skip that targetserver
+              await ns.sleep(20)
             }
-            else {
+            else if (threadPossible(ssrv, sgname) >= 1 && threadPossible(ssrv, sgname) < ngthreads) {
+              var threads_cache = threadPossible(ssrv, sgname);
+              start(gname, ssrv.name, threadPossible(ssrv, sgname), tserv.name);
+              var time_update = times.filter(tf => tf.name == tserv.name)
+              time_update.havail = false;
+              ngthreads -= threadPossible(ssrv, sgname);
+              update_process();
+              var ssgthreads = calculateThreads(script_servers, sgname, tserv.name);
+              ns.print("exec grow, arg " + tserv.name + ", threads " + threads_cache + ", left: " + (ngthreads1c - ssgthreads) + ", @ " + ssrv.name);
               await ns.sleep(1)
             }
+            else if (threadPossible(ssrv, sgname) <= 0) {
+              await ns.sleep(1)// skip the current ssrv bc no free threads
+            }
+            else {
+              ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
+              ns.exit()
+            }
+          }
+          else if (mgthreads <= 0) {
+            gsuccess = false;
+            await ns.sleep(1) // skip that targetserver
+          }
+          else {
+            await ns.sleep(1)
           }
         }
       }
@@ -350,65 +344,61 @@ export async function main(ns) {
       let times_server = times.filter(tf => tf.name == tserv.name);
       let hack_time = ns.getHackTime(tserv.name);
       if ((times_server.havail == true && (current_time - hack_time) > times_server.wstart + times_server.wtime) || (cur_sec <= min_sec && cur_mon >= max_mon)) {
-        let hsuccess = true;
-        while (hsuccess) {
-          for (const ssrv of script_servers) {
-            let nhthreads = Math.ceil(ns.hackAnalyzeThreads(tserv.name, (cur_mon * hperct)));
-            update_process();
-            update_RAM();
-            // magic hackmath!
-            let shthreads = calculateThreads(script_servers, shname, tserv.name);
-            let chprocsr = threadSameArg(ssrv.process_list, shname, tserv.name);
-            let mhthreads = nhthreads - shthreads;
-            if (arg.debug) {
-              ns.tprint(script_servers.map(sm => sm.process_list));
-              ns.tprint("action: hack");
-              ns.tprint("ssrv: " + ssrv.name);
-              ns.tprint("tserv: " + tserv.name);
-              ns.tprint("f threads: " + threadPossible(ssrv, shname));
-              ns.tprint("s threads: " + shthreads);
-              ns.tprint("c procsr: " + chprocsr);
-              ns.tprint("n threads: " + nhthreads);
-              ns.tprint("tserv: " + tserv.name + "\n sserv: ");
-              ns.tprint(ssrv)
-            }
-            if (nhthreads > 0 && mhthreads > 0 && !chprocsr) {
-              if (threadPossible(ssrv, shname) >= nhthreads) {
-                start(hname, ssrv.name, nhthreads, tserv.name);
-                ns.print("exec hack, arg " + tserv.name + ", threads " + nhthreads + ", @ " + ssrv.name);
-                hsuccess = false;
-                await ns.sleep(20)
-              }
-              else if (threadPossible(ssrv, shname) >= 1 && threadPossible(ssrv, shname) < nhthreads) {
-                var threads_cache = threadPossible(ssrv, shname);
-                start(hname, ssrv.name, threadPossible(ssrv, shname), tserv.name);
-                nhthreads -= threadPossible(ssrv, shname);
-                update_process();
-                var sshthreads = calculateThreads(script_servers, shname, tserv.name);
-                ns.print("exec hack, arg " + tserv.name + ", threads " + threads_cache + ", left: " + (nhthreads - sshthreads) + ", @ " + ssrv.name);
-                await ns.sleep(20)
-              }
-              else if (threadPossible(ssrv, shname) == 0) {
-                await ns.sleep(1)// skip the current ssrv bc no free threads
-              }
-              else {
-                ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
-                ns.exit()
-              }
-            }
-            else if (mhthreads <= 0) {
+        for (const ssrv of script_servers) {
+          let nhthreads = Math.ceil(ns.hackAnalyzeThreads(tserv.name, (cur_mon * hperct)));
+          update_process();
+          update_RAM();
+          // magic hackmath!
+          let shthreads = calculateThreads(script_servers, shname, tserv.name);
+          let chprocsr = threadSameArg(ssrv.process_list, shname, tserv.name);
+          let mhthreads = nhthreads - shthreads;
+          if (arg.debug) {
+            ns.tprint(script_servers.map(sm => sm.process_list));
+            ns.tprint("action: hack");
+            ns.tprint("ssrv: " + ssrv.name);
+            ns.tprint("tserv: " + tserv.name);
+            ns.tprint("f threads: " + threadPossible(ssrv, shname));
+            ns.tprint("s threads: " + shthreads);
+            ns.tprint("c procsr: " + chprocsr);
+            ns.tprint("n threads: " + nhthreads);
+            ns.tprint("tserv: " + tserv.name + "\n sserv: ");
+            ns.tprint(ssrv)
+          }
+          if (nhthreads > 0 && mhthreads > 0 && !chprocsr) {
+            if (threadPossible(ssrv, shname) >= nhthreads) {
+              start(hname, ssrv.name, nhthreads, tserv.name);
+              ns.print("exec hack, arg " + tserv.name + ", threads " + nhthreads + ", @ " + ssrv.name);
               hsuccess = false;
-              await ns.sleep(10) // skip that targetserver
+              await ns.sleep(1)
+            }
+            else if (threadPossible(ssrv, shname) >= 1 && threadPossible(ssrv, shname) < nhthreads) {
+              var threads_cache = threadPossible(ssrv, shname);
+              start(hname, ssrv.name, threadPossible(ssrv, shname), tserv.name);
+              nhthreads -= threadPossible(ssrv, shname);
+              update_process();
+              var sshthreads = calculateThreads(script_servers, shname, tserv.name);
+              ns.print("exec hack, arg " + tserv.name + ", threads " + threads_cache + ", left: " + (nhthreads - sshthreads) + ", @ " + ssrv.name);
+              await ns.sleep(1)
+            }
+            else if (threadPossible(ssrv, shname) <= 0) {
+              await ns.sleep(1)// skip the current ssrv bc no free threads
             }
             else {
-              await ns.sleep(1000)
+              ns.alert("Debug:\nYou should'nt be here. Try run again with argument --debug");
+              ns.exit()
             }
+          }
+          else if (mhthreads <= 0) {
+            hsuccess = false;
+            await ns.sleep(1) // skip that targetserver
+          }
+          else {
+            await ns.sleep(1)
           }
         }
       }
     };
     wcount++;
-    await ns.sleep(10000); // wait 10 secs, before go through nots() again 😉
-    ns.toast("GWHCtrl: Still alive!")
+    await ns.sleep(1000); // wait 10 secs, before go through nots() again 😉
   }
 }
