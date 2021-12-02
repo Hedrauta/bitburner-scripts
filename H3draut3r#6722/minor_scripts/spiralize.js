@@ -1,4 +1,4 @@
-const { compileFunction } = require('vm');
+const util = require('util')
 let res = [];
 const arr = [
     [36, 11, 41, 47, 22, 35, 6, 24, 8, 33, 30],
@@ -64,5 +64,4 @@ while (arr.flat().length > 0) {
         }
     }
 }
-console.log(res);
-// run on VSCode with Extension `Code Runner`, ( Node.JS needed )
+console.log(util.inspect(res, { maxArrayLength: null }))
