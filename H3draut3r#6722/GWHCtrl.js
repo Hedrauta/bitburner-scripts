@@ -108,7 +108,7 @@ export async function main(ns) {
         let ctThreads = sp.filter(spf => spf.filename.indexOf(script) != -1 && spf.args.indexOf(arg) != -1)
           .reduce((a, b) => a + b.threads, 0);
         ctThreads /= (1 + ((sv.cpuCores - 1) / 16));
-        cTc += ctThreads
+        cTc += Math.ceil(ctThreads)
       }
     }
     return cTc
