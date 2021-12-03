@@ -134,6 +134,12 @@ export async function main(ns) {
   function start(script, host, threads, arg) {
     ns.exec(script, host, threads, arg)
   }
+  // for .padStart on values in ns.print
+  function pad(num, padlen, padchar) {
+    var pad_char = typeof padchar !== 'undefined' ? padchar : ' ';
+    var pad = new Array(1 + padlen).join(pad_char);
+    return (pad + num).slice(-pad.length);
+  }
 
   //end of functions
 
@@ -232,14 +238,14 @@ export async function main(ns) {
           }
           else if (sctp >= mwt) {
             start(wname, scsrv.name, mwt, tserv.name);
-            ns.print("exec weaken, arg " + tserv.name + ", threads " + mwt + ", @ " + scsrv.name);
+            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec weaken".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(mwt, 5));
             time_update.wstart = Date.now();
             time_update.havail = true;
             await ns.sleep(1) // prevent freeze
           }
           else if (mwt > sctp) {
             start(wname, scsrv.name, sctp, tserv.name);
-            ns.print("exec weaken, arg " + tserv.name + ", threads " + sctp + ", missing threads (sc): " + (ncwt - sctp) + ", @" + scsrv.name);
+            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec weaken".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(sctp, 5) + " missing: " + pad((ncwt - sctp), 5));
             await ns.sleep(1)
           }
           if (sctp > 0) {
@@ -255,13 +261,13 @@ export async function main(ns) {
           }
           else if (sctp >= mgt) {
             start(gname, scsrv.name, mgt, tserv.name);
-            ns.print("exec grow, arg " + tserv.name + ", threads " + mgt + ", @ " + scsrv.name);
+            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec grow".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(mgt, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mgt > sctp) {
             start(gname, scsrv.name, sctp, tserv.name);
-            ns.print("exec grow, arg " + tserv.name + ", threads " + sctp + ", missing threads (sc): " + (ncgt - sctp) + ", @" + scsrv.name);
+            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec grow".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(sctp, 5) + " missing: " + pad((ncgt - sctp), 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
@@ -281,13 +287,13 @@ export async function main(ns) {
           }
           else if (hcsctp >= mht) {
             start(hname, scsrv.name, mht, tserv.name);
-            ns.print("exec hack, arg " + tserv.name + ", threads " + mht + ", @ " + scsrv.name);
+            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec hack".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(mht, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mht > hcsctp) {
             start(hname, scsrv.name, hcsctp, tserv.name);
-            ns.print("exec hack, arg " + tserv.name + ", threads " + hcsctp + ", missing threads (sc): " + (ncsht - hcsctp) + ", @" + scsrv.name);
+            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec hack".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(hcsctp, 5) + " missing: " + pad((ncsht - hcsctp),5));
             await ns.sleep(1)
           }
         } // end if hack
