@@ -210,9 +210,10 @@ export async function main(ns) {
     upd_ssrvr();
     await copy_files();
     for (let tserv of nots()) {
+      update_RAM();
+      script_servers.sort((a,b)=> a.cur_ram - b.cur_ram)
       for (let scsrv of script_servers) {
         // updating script-servers
-        update_RAM();
         update_process();
 
         // fetching a lot of data ++ redo on every script server
@@ -251,14 +252,14 @@ export async function main(ns) {
           }
           else if (sctp >= mwt) {
             start(wname, scsrv.name, mwt, tserv.name);
-            ns.print("➡" + scsrv.name.padEnd(20) + "➡🔒🔽".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mwt, 5));
+            ns.print( "➡🔒🔽".padEnd(8) +"@" + scsrv.name + "\n 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mwt, 5));
             time_update.wstart = Date.now();
             time_update.havail = true;
             await ns.sleep(1) // prevent freeze
           }
           else if (mwt > sctp) {
             start(wname, scsrv.name, sctp, tserv.name);
-            ns.print("➡" + scsrv.name.padEnd(20) + "➡🔒🔽".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncwt - sctp), 5));
+            ns.print ("➡🔒🔽".padEnd(8) +"@" + scsrv.name + "\n 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncwt - sctp), 5));
             await ns.sleep(1)
           }
           if (sctp > 0) {
@@ -274,13 +275,13 @@ export async function main(ns) {
           }
           else if (sctp >= mgt) {
             start(gname, scsrv.name, mgt, tserv.name);
-            ns.print("➡" + scsrv.name.padEnd(20) + "➡💰💹".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mgt, 5));
+            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mgt, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mgt > sctp) {
             start(gname, scsrv.name, sctp, tserv.name);
-            ns.print("➡" + scsrv.name.padEnd(20) + "➡💰💹".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncgt - sctp), 5));
+            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncgt - sctp), 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
@@ -300,13 +301,13 @@ export async function main(ns) {
           }
           else if (hcsctp >= mht) {
             start(hname, scsrv.name, mht, tserv.name);
-            ns.print("➡" + scsrv.name.padEnd(20) + "➡💱".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mht, 5));
+            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mht, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mht > hcsctp) {
             start(hname, scsrv.name, hcsctp, tserv.name);
-            ns.print("➡" + scsrv.name.padEnd(20) + "➡💱".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(hcsctp, 5) + " 📵:" + pad((ncsht - hcsctp),5));
+            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(hcsctp, 5) + " 📵:" + pad((ncsht - hcsctp),5));
             await ns.sleep(1)
           }
         } // end if hack
