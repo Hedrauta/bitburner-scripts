@@ -167,9 +167,22 @@ export async function main(ns) {
 
   update_RAM(); // initial calls
   update_process();
-
+  let on = "✅";
+  let off = "⛔";
+  function aSign (a){
+    if (a){
+      return on
+    }
+    else{
+      return off
+    }
+  }
   ns.tprint("Starting automatic Grow/Weaken/Hack");
-  ns.tprint("Values set on startup: \n Hacking " + arg.hack + "% of targets Server money.\n Use non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + arg.use_non_owned + "\n Grow up to " + arg.grow_to + "% of targets max money");
+  ns.tprint("Values set on startup:"+
+    "\n    Hacking " + arg.hack + "% of targets Server money."+
+    "\n    Use home as a Script-Server ( enable with --use_home )" + aSign(arg.use_home) +
+    "\n    Use non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + aSign(arg.use_non_owned) + 
+    "\n    Grow up to " + arg.grow_to + "% of targets max money");
   ns.tprint("INFO: Starting GWHCTRL on " + cur_host)
   ns.disableLog("getServerUsedRam");
   if (!arg.debug) { // disable logging for certain functions (if debug is false), i do spam them alot 😂
@@ -238,14 +251,14 @@ export async function main(ns) {
           }
           else if (sctp >= mwt) {
             start(wname, scsrv.name, mwt, tserv.name);
-            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec weaken".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(mwt, 5));
+            ns.print("➡" + scsrv.name.padEnd(20) + "➡🔒🔽".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mwt, 5));
             time_update.wstart = Date.now();
             time_update.havail = true;
             await ns.sleep(1) // prevent freeze
           }
           else if (mwt > sctp) {
             start(wname, scsrv.name, sctp, tserv.name);
-            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec weaken".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(sctp, 5) + " missing: " + pad((ncwt - sctp), 5));
+            ns.print("➡" + scsrv.name.padEnd(20) + "➡🔒🔽".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncwt - sctp), 5));
             await ns.sleep(1)
           }
           if (sctp > 0) {
@@ -261,13 +274,13 @@ export async function main(ns) {
           }
           else if (sctp >= mgt) {
             start(gname, scsrv.name, mgt, tserv.name);
-            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec grow".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(mgt, 5));
+            ns.print("➡" + scsrv.name.padEnd(20) + "➡💰💹".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mgt, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mgt > sctp) {
             start(gname, scsrv.name, sctp, tserv.name);
-            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec grow".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(sctp, 5) + " missing: " + pad((ncgt - sctp), 5));
+            ns.print("➡" + scsrv.name.padEnd(20) + "➡💰💹".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncgt - sctp), 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
@@ -287,13 +300,13 @@ export async function main(ns) {
           }
           else if (hcsctp >= mht) {
             start(hname, scsrv.name, mht, tserv.name);
-            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec hack".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(mht, 5));
+            ns.print("➡" + scsrv.name.padEnd(20) + "➡💱".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(mht, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mht > hcsctp) {
             start(hname, scsrv.name, hcsctp, tserv.name);
-            ns.print("@" + scsrv.name.padEnd(20,'_') + "exec hack".padEnd(12) + "arg: " + tserv.name.padEnd(20) + "threads: " + pad(hcsctp, 5) + " missing: " + pad((ncsht - hcsctp),5));
+            ns.print("➡" + scsrv.name.padEnd(20) + "➡💱".padEnd(5) + " 🔑:" + tserv.name.padEnd(20) + "📲:" + pad(hcsctp, 5) + " 📵:" + pad((ncsht - hcsctp),5));
             await ns.sleep(1)
           }
         } // end if hack
