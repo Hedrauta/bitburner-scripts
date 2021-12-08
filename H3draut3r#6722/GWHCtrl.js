@@ -169,20 +169,21 @@ export async function main(ns) {
   update_process();
   let on = "✅";
   let off = "⛔";
-  function aSign (a){
-    if (a){
+  function aSign(a) {
+    if (a) {
       return on
     }
-    else{
+    else {
       return off
     }
   }
   ns.tprint("Starting automatic Grow/Weaken/Hack");
-  ns.tprint("Values set on startup:"+
-    "\n    Hacking " + arg.hack + "% of targets Server money."+
-    "\n    Use home as a Script-Server ( enable with --use_home )" + aSign(arg.use_home) +
-    "\n    Use non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " + aSign(arg.use_non_owned) + 
-    "\n    Grow up to " + arg.grow_to + "% of targets max money");
+  ns.tprint("Values set on startup:" +
+    "\n".padEnd(6) + aSign(arg.use_home).padEnd(2) + "Use home as a Script-Server ( enable with --use_home )" +
+    "\n".padEnd(6) + aSign(arg.use_non_owned).padEnd(2) + "Use non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " +
+    "\n".padEnd(4) + "🔒🔽".padEnd(5) + "Always Weaken Target-Server to minimum Security" +
+    "\n".padEnd(4) + "💰💹".padEnd(5) + "Grow up to " + arg.grow_to + "% of targets max money" +
+    "\n".padEnd(6) + "💱".padEnd(3) + "Hacking " + arg.hack + "% of targets Server money.");
   ns.tprint("INFO: Starting GWHCTRL on " + cur_host)
   ns.disableLog("getServerUsedRam");
   if (!arg.debug) { // disable logging for certain functions (if debug is false), i do spam them alot 😂
@@ -211,8 +212,7 @@ export async function main(ns) {
     await copy_files();
     for (let tserv of nots()) {
       update_RAM();
-      script_servers.sort((a,b)=> (a.values.maxRam - a.cur_ram) - (b.values.maxRam - b.cur_ram));
-      script_servers.reverse();
+      script_servers.sort((a, b) => (a.values.maxRam - a.cur_ram) - (b.values.maxRam - b.cur_ram)).reverse();
       for (let scsrv of script_servers) {
         // updating script-servers
         update_process();
@@ -253,14 +253,14 @@ export async function main(ns) {
           }
           else if (sctp >= mwt) {
             start(wname, scsrv.name, mwt, tserv.name);
-            ns.print( "➡🔒🔽".padEnd(8) +"@" + scsrv.name + "\n"+"↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(mwt, 5));
+            ns.print("➡🔒🔽".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(mwt, 5));
             time_update.wstart = Date.now();
             time_update.havail = true;
             await ns.sleep(1) // prevent freeze
           }
           else if (mwt > sctp) {
             start(wname, scsrv.name, sctp, tserv.name);
-            ns.print ("➡🔒🔽".padEnd(8) +"@" + scsrv.name + "\n"+"↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncwt - sctp), 5));
+            ns.print("➡🔒🔽".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncwt - sctp), 5));
             await ns.sleep(1)
           }
           if (sctp > 0) {
@@ -276,13 +276,13 @@ export async function main(ns) {
           }
           else if (sctp >= mgt) {
             start(gname, scsrv.name, mgt, tserv.name);
-            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n"+"↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(mgt, 5));
+            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(mgt, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mgt > sctp) {
             start(gname, scsrv.name, sctp, tserv.name);
-            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n"+"↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncgt - sctp), 5));
+            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncgt - sctp), 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
@@ -302,13 +302,13 @@ export async function main(ns) {
           }
           else if (hcsctp >= mht) {
             start(hname, scsrv.name, mht, tserv.name);
-            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n"+"↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(mht, 5));
+            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(mht, 5));
             time_update.havail = false;
             await ns.sleep(1)
           }
           else if (mht > hcsctp) {
             start(hname, scsrv.name, hcsctp, tserv.name);
-            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n"+"↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(hcsctp, 5) + " 📵:" + pad((ncsht - hcsctp),5));
+            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(hcsctp, 5) + " 📵:" + pad((ncsht - hcsctp), 5));
             await ns.sleep(1)
           }
         } // end if hack
