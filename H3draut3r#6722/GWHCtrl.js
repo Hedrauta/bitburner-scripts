@@ -211,12 +211,11 @@ export async function main(ns) {
     upd_ssrvr();
     await copy_files();
     for (let tserv of nots()) {
-      update_RAM();
-      script_servers.sort((a, b) => (a.values.maxRam - a.cur_ram) - (b.values.maxRam - b.cur_ram)).reverse();
+      update_RAM(); // update RAM of script-server to sort them descending of free RAM
+      script_servers.sort((a, b) => (b.values.maxRam - b.cur_ram) - (a.values.maxRam - a.cur_ram))
       for (let scsrv of script_servers) {
         // updating script-servers
         update_process();
-
         // fetching a lot of data ++ redo on every script server
         let current_money = ns.getServerMoneyAvailable(tserv.name); // Targets Server Current money 
         let max_money = tserv.values.moneyMax * gperct; // Targets Server Maximum money * grow to X % ... fixed value * mult
