@@ -167,24 +167,23 @@ export async function main(ns) {
 
   update_RAM(); // initial calls
   update_process();
-  let on = "✅";
-  let off = "⛔";
+  // function if set value is true or false (to use only on print)
   function aSign(a) {
     if (a) {
-      return on
+      return "✅"
     }
     else {
-      return off
+      return "⛔"
     }
   }
-  ns.tprint("Starting automatic Grow/Weaken/Hack");
+  ns.tprint("INFO: Starting automatic Grow/Weaken/Hack");
   ns.tprint("Values set on startup:" +
     "\n".padEnd(6) + aSign(arg.use_home).padEnd(2) + "Use home as a Script-Server ( enable with --use_home )" +
     "\n".padEnd(6) + aSign(arg.use_non_owned).padEnd(2) + "Use non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " +
     "\n".padEnd(4) + "🔒🔽".padEnd(5) + "Always Weaken Target-Server to minimum Security" +
     "\n".padEnd(4) + "💰💹".padEnd(5) + "Grow up to " + arg.grow_to + "% of targets max money" +
     "\n".padEnd(6) + "💱".padEnd(3) + "Hacking " + arg.hack + "% of targets Server money.");
-  ns.tprint("INFO: Starting GWHCTRL on " + cur_host)
+  ns.tprint("WARNING: Starting GWHCTRL on " + cur_host)
   ns.disableLog("getServerUsedRam");
   if (!arg.debug) { // disable logging for certain functions (if debug is false), i do spam them alot 😂
     ns.disableLog("getServerMaxRam");
