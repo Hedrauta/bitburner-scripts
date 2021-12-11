@@ -177,3 +177,29 @@ export function uniquePaths2(A) {
     // of the matrix
     return paths[r - 1].pop();
 }
+export function minSumPath(A) {
+    let memo = [];
+    let n = A.length - 1;
+    for (let i = 0; i < A[n].length; i++)
+        memo[i] = A[n][i];
+    for (let i = A.length - 2; i >= 0; i--)
+        for (let j = 0;
+            j < A[i].length; j++)
+            memo[j] = A[i][j] +
+                Math.min(memo[j],
+                    memo[j + 1]);
+    return memo[0];
+}
+export function allServers(ns) {
+    const nodes = new Set
+    function dfs(node) {
+        nodes.add(node);
+        for (const neighbor of ns.scan(node)) {
+            if (!nodes.has(neighbor)) {
+                dfs(neighbor)
+            }
+        }
+    }
+    dfs("home")
+    return [...nodes]
+}
