@@ -27,7 +27,7 @@ export async function main(ns) {
     for (let server of nos()) {
         let server_ls = ns.ls(server, ".cct")
         if (server_ls.length >= 1) {
-            ns.tprint("Found " + server_ls.length + " Coding Contracts on " + server)
+            ns.tprint("Found " + server_ls.length + " Coding Contracts on " + server + " : " + server_ls)
         }
     }
 }
