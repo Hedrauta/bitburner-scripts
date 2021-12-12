@@ -1,58 +1,49 @@
 /** @param {NS} ns **/
-let scchelperfile = "/ctrl/ctrl_helper.js"
-export async function startup(ns) {
-    let cur_host = ns.getHostname();
-    await ns.wget("https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/ctrl_helper.js", scchelperfile, cur_host)
-}
-startup();
-import * as ccHelper from scchelperfile;
+
+import * as ccHelper from "./ctrl_helper.js";
 // as long as i don't have a solution for everything, i need to define the current solutions
-let solveable = ['Generate IP Addresses','Spiralize Matrix','Unique Paths in a Grid I','Unique Paths in a Grid II','Minimum Path Sum in a Triangle']
+let solveable = ['Generate IP Addresses', 'Spiralize Matrix', 'Unique Paths in a Grid I', 'Unique Paths in a Grid II', 'Minimum Path Sum in a Triangle']
 export async function main(ns) {
     let cc_servers = ccHelper.allServers(ns).map(am => { return { name: am, ccLs: ns.ls(am, ".cct") } });
     let fail = false;
     while (!fail) {
         for (var ccServer of cc_servers) {
             if (ccServer.ccLs.length > 0) {
-                for (ccFile of ccServer.ccLs) {
-                    let ccType = ns.codingcontract.getContractType(ccFile, ccServer);
-                    let ccData = ns.codingcontract.getData(ccFile, ccServer);
+                for (var ccFile of ccServer.ccLs) {
+                    let ccType = ns.codingcontract.getContractType(ccFile, ccServer.name);
+                    let ccData = ns.codingcontract.getData(ccFile, ccServer.name);
+                    let ccResult;
                     if (solveable.some(t => t = ccType)) {
-                        if(ccType = solveable[0]) {
-                            let ccResult = ccHelper.generateIPs(ccData);
-                            let ccTry = ns.codingcontract.attempt(ccResult, ccFile, ccServer, {returnReward: true});
-                            if (ccTry == null || ccTry =="") {
-                                fail = true;
-                                ns.tprint("WARNING: Failed Contract Type: "+ccType+" @"+ccServer+
-                                "\nData from Contract: "+ccData+
-                                "\nResult from Solver: "+ccResult)
-                            }
-                            else {
-                                ns.tprint("INFO: @"+ccServer+" Contract successful."+
-                                "\n Reward: "+ccTry)
-                            }
+                        if (ccType = solveable[0]) {
+                            ccResult = ccHelper.generateIPs(ccData);
+                        }
+                        if (ccType = solveable[1]) {
+                            ccResult = ccHelper.spiralizeMatrix(ccData)
+                        }
+                        if (ccType = solveable[2]) {
+                            ccResult = ccHelper.uniquePaths1(ccData)
+                        }
+                        if (ccType = solveable[3]) {
+                            ccResult = ccHelper.uniquePaths2(ccData)
+                        }
+                        if (ccType = solveable[4]) {
+                            ccResult = ccHelper.minSumPath(ccData)
+                        }
+                        let ccTry = ns.codingcontract.attempt(ccResult, ccFile, ccServer.name, { returnReward: true });
+                        if (ccTry == null || ccTry == "") {
+                            fail = true;
+                            ns.tprint("WARNING: Failed Contract Type: " + ccType + " @" + ccServer.name +
+                                "\nData from Contract: " + ccData +
+                                "\nResult from Solver: " + ccResult)
+                        }
+                        else {
+                            ns.tprint("INFO: @" + ccServer.name + " Contract successful." +
+                                "\n Reward: " + ccTry)
                         }
                     }
                 }
             }
         }
+        await ns.sleep(1000);
     }
-
 }
-/* list of fetched types on my game
-[ 'Algorithmic Stock Trader II',
- 'Algorithmic Stock Trader III',
- 'Algorithmic Stock Trader IV',
- 'Array Jumping Game',
- 'Find All Valid Math Expressions',
- 'Find Largest Prime Factor',
- 'Generate IP Addresses',
- 'Merge Overlapping Intervals',
- 'Minimum Path Sum in a Triangle',
- 'Sanitize Parentheses in Expression',
- 'Spiralize Matrix',
- 'Subarray with Maximum Sum',
- 'Total Ways to Sum',
- 'Unique Paths in a Grid I',
- 'Unique Paths in a Grid II' ]
- */
