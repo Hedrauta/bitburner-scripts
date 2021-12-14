@@ -331,3 +331,11 @@ export async function main(ns) {
         await ns.sleep(10000);
     }
 }
+/* list of missing contract types on my script
+[ 'Algorithmic Stock Trader II',
+ 'Algorithmic Stock Trader III',
+ 'Algorithmic Stock Trader IV',
+ 'Find All Valid Math Expressions',
+ 'Sanitize Parentheses in Expression',
+ 'Total Ways to Sum']
+ */
