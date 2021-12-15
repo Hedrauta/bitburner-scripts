@@ -1,8 +1,3 @@
-let testdata = [99,68,153,103,138,107,35,190,128,89,132,50,34];
-console.log(stockTrader1(testdata));
-function stockTrader1(data) {
-    let i=0,j=1;
-    if (data[i]>data[j]) {
-        
-    }
-}
+let testData = [158, 153, 33, 123, 81, 51, 112, 30, 116, 65, 81, 56, 189, 14, 41, 91, 17, 158, 107, 4, 75, 57, 17, 24, 104, 4, 121, 190, 177, 93, 93, 136, 103, 107, 38, 43, 147]
+
+// at most two transactions.

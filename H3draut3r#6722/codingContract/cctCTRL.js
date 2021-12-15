@@ -10,7 +10,60 @@ export async function main(ns) {
         "Unique Paths in a Grid II",
         "Minimum Path Sum in a Triangle",
         "Find Largest Prime Factor",
-        "Subarray with Maximum Sum"]
+        "Subarray with Maximum Sum",
+        "Merge Overlapping Intervals",
+        "Algorithmic Stock Trader I",
+        "Algorithmic Stock Trader II"]
+    function stockTrader2(data) {
+        let i = 0, j = 1;
+        while (data[i] >= data[j] && j != undefined) {
+            i++; j++
+        }
+        let sum = 0, cache = 0
+        while (data[j] != undefined) {
+            cache = data[j] - data[i]
+            let jk = JSON.parse(JSON.stringify(j))
+            for (k = j; data[k] != undefined; k++) {
+                if ((data[k] - data[i]) / (k - i) > cache) {
+                    cache = data[k] - data[i];
+                    jk = JSON.parse(JSON.stringify(k))
+                }
+            }
+            if (jk > j) {
+                i = ++jk;
+                j = ++jk
+            }
+            else { i = ++j; j++ }
+            sum += cache
+            while (data[i] >= data[j] && data[j] != undefined) {
+                i++; j++
+            }
+        }
+        return sum
+
+    }
+    function stockTrader1(data) {
+        let i = 0, j = 1;
+        while (data[i] >= data[j] && j != undefined) {
+            i++; j++
+        }
+        let sum = [0]
+        while (data[j] != undefined) {
+            let cache = data[j] - data[i]
+            if (cache >= 0) {
+                sum.push(cache)
+            }
+            j++
+            if (data[j] == undefined) {
+                i++;
+                j = i + 1
+            }
+        }
+        if (sum.length > 0) {
+            sum.sort((a, b) => a - b)
+        }
+        return sum.pop()
+    }
     function arrayMerger(data) {
         data.sort((a, b) => a[0] - b[0]);
         let result = [];
@@ -31,7 +84,6 @@ export async function main(ns) {
                 }
                 else { submerge = false }
             }
-            console.log(data)
             result.push(tempResult)
         }
         return result;
@@ -307,6 +359,15 @@ export async function main(ns) {
                         }
                         if (ccType == solveable[6]) {
                             ccResult = subarraySum(ccData)
+                        }
+                        if (ccType == solveable[7]) {
+                            ccResult = arrayMerger(ccData)
+                        }
+                        if (ccType == solveable[8]) {
+                            ccResult = stockTrader1(ccData)
+                        }
+                        if (ccType == solveable[9]) {
+                            ccResult = stockTrader2(ccData)
                         }
                         if (ccResult != null) {
                             let ccTry = ns.codingcontract.attempt(ccResult, ccFile, ccServer.name, { returnReward: true })
