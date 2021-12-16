@@ -11,6 +11,7 @@ export async function main(ns) {
     ['use_all_purchased', true], // use of all purchased server (except ignored ones), to enable, run with "--use_all_purchased"
     // this will ignore --include
     ['grow_to', 100], // will grow the server to x% of targets max-money (for early-starts)
+    ['free_home', 32], // how much free ram "home" will left of (so, at least n amount of RAMs GB will be keep free)
     ['debug', false]
   ]);
   let use_servers = [];
@@ -52,7 +53,7 @@ export async function main(ns) {
   function update_RAM() {
     for (var ramsrv of script_servers) {
       if (ramsrv.name == "home") {
-        ramsrv.cur_ram = ns.getServerUsedRam(ramsrv.name) + 16; // at least 16GB will be not used for home
+        ramsrv.cur_ram = ns.getServerUsedRam(ramsrv.name) + arg.free_home; // at least 25GB will be not used for home
       }
       else { ramsrv.cur_ram = ns.getServerUsedRam(ramsrv.name) };
       ramsrv.w_res = ns.weakenAnalyze(1, ramsrv.values.cpuCores)
@@ -167,23 +168,24 @@ export async function main(ns) {
 
   update_RAM(); // initial calls
   update_process();
-  // function if set value is true or false (to use only on print)
+  let on = "✅";
+  let off = "⛔";
   function aSign(a) {
     if (a) {
-      return "✅"
+      return on
     }
     else {
-      return "⛔"
+      return off
     }
   }
-  ns.tprint("INFO: Starting automatic Grow/Weaken/Hack");
+  ns.tprint("Starting automatic Grow/Weaken/Hack");
   ns.tprint("Values set on startup:" +
     "\n".padEnd(6) + aSign(arg.use_home).padEnd(2) + "Use home as a Script-Server ( enable with --use_home )" +
     "\n".padEnd(6) + aSign(arg.use_non_owned).padEnd(2) + "Use non-owned rooted servers as a Script-Server (enable with --use_non_owned ): " +
     "\n".padEnd(4) + "🔒🔽".padEnd(5) + "Always Weaken Target-Server to minimum Security" +
     "\n".padEnd(4) + "💰💹".padEnd(5) + "Grow up to " + arg.grow_to + "% of targets max money" +
     "\n".padEnd(6) + "💱".padEnd(3) + "Hacking " + arg.hack + "% of targets Server money.");
-  ns.tprint("WARNING: Starting GWHCTRL on " + cur_host)
+  ns.tprint("INFO: Starting GWHCTRL on " + cur_host)
   ns.disableLog("getServerUsedRam");
   if (!arg.debug) { // disable logging for certain functions (if debug is false), i do spam them alot 😂
     ns.disableLog("getServerMaxRam");
