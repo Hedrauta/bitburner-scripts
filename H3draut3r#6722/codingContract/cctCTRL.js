@@ -1,5 +1,4 @@
 /** @param {NS} ns **/
-import * as ccHelper from "./cctSolver.js";
 // as long as i don't have a solution for everything, i need to define the current solutions
 
 export async function main(ns) {
@@ -12,6 +11,7 @@ export async function main(ns) {
         "Find Largest Prime Factor",
         "Subarray with Maximum Sum",
         "Merge Overlapping Intervals",
+        "Array Jumping Game",
         "Algorithmic Stock Trader I",
         "Algorithmic Stock Trader II"]
     function stockTrader2(data) {
@@ -23,7 +23,7 @@ export async function main(ns) {
         while (data[j] != undefined) {
             cache = data[j] - data[i]
             let jk = JSON.parse(JSON.stringify(j))
-            for (k = j; data[k] != undefined; k++) {
+            for (var k = j; data[k] != undefined; k++) {
                 if ((data[k] - data[i]) / (k - i) > cache) {
                     cache = data[k] - data[i];
                     jk = JSON.parse(JSON.stringify(k))
@@ -63,6 +63,24 @@ export async function main(ns) {
             sum.sort((a, b) => a - b)
         }
         return sum.pop()
+    }
+    function arrayJump(array) {
+        let i, j;
+        i = j = array.length - 1
+        j--
+        while (array[j] != undefined) {
+            if (array[j] >= (i - j)) {
+                i = j
+                if (i == 0) {
+                    return 1
+                }
+                j--
+            }
+            else { j-- }
+            if (array[j] == undefined) {
+                return 0
+            }
+        }
     }
     function arrayMerger(data) {
         data.sort((a, b) => a[0] - b[0]);
@@ -307,7 +325,7 @@ export async function main(ns) {
         for (let i = 0; i < A[n].length; i++)
             memo[i] = A[n][i];
         for (let i = A.length - 2; i >= 0; i--)
-            for (let j = 0;
+            for (let     j = 0;
                 j < A[i].length; j++)
                 memo[j] = A[i][j] +
                     Math.min(memo[j],
@@ -337,7 +355,7 @@ export async function main(ns) {
                 for (var ccFile of ccServer.ccLs) {
                     let ccType = await ns.codingcontract.getContractType(ccFile, ccServer.name);
                     let ccData = await ns.codingcontract.getData(ccFile, ccServer.name);
-                    if (solveable.some(solvers => solvers == ccType)) {
+                    if (solveable.some(s => s == ccType)) {
                         let ccResult;
                         if (ccType == solveable[0]) {
                             ccResult = generateIPs(ccData)
@@ -364,9 +382,12 @@ export async function main(ns) {
                             ccResult = arrayMerger(ccData)
                         }
                         if (ccType == solveable[8]) {
-                            ccResult = stockTrader1(ccData)
+                            ccResult = arrayJump(ccData)
                         }
                         if (ccType == solveable[9]) {
+                            ccResult = stockTrader1(ccData)
+                        }
+                        if (ccType == solveable[10]) {
                             ccResult = stockTrader2(ccData)
                         }
                         if (ccResult != null) {
