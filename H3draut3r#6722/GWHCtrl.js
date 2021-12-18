@@ -215,7 +215,7 @@ export async function main(ns) {
       update_RAM(); // update RAM of script-server to sort them descending of free RAM
       script_servers.sort((a, b) => (b.values.maxRam - b.cur_ram) - (a.values.maxRam - a.cur_ram))
       for (let scsrv of script_servers) {
-        if (ns.serverExists(scsrv)) {
+        if (ns.serverExists(scsrv.name)) {
           // updating script-servers
           update_process();
           // fetching a lot of data ++ redo on every script server
@@ -313,9 +313,9 @@ export async function main(ns) {
               await ns.sleep(1)
             }
           } // end if hack
-        }
-      } // end for scsrc
-    } // end for tserv
+        } // end for scsrc
+      }
+    } // end for tserv & if test
     await ns.sleep(1) // go back to while-start asap
   } // end while
 } // EOL
