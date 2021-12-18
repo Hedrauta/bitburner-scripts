@@ -13,56 +13,52 @@ export async function main(ns) {
         "Merge Overlapping Intervals",
         "Array Jumping Game",
         "Algorithmic Stock Trader I",
-        "Algorithmic Stock Trader II"]
-    function stockTrader2(data) {
-        let i = 0, j = 1;
-        while (data[i] >= data[j] && j != undefined) {
-            i++; j++
-        }
-        let sum = 0, cache = 0
-        while (data[j] != undefined) {
-            cache = data[j] - data[i]
-            let jk = JSON.parse(JSON.stringify(j))
-            for (var k = j; data[k] != undefined; k++) {
-                if ((data[k] - data[i]) / (k - i) > cache) {
-                    cache = data[k] - data[i];
-                    jk = JSON.parse(JSON.stringify(k))
-                }
-            }
-            if (jk > j) {
-                i = ++jk;
-                j = ++jk
-            }
-            else { i = ++j; j++ }
-            sum += cache
-            while (data[i] >= data[j] && data[j] != undefined) {
-                i++; j++
+        "Algorithmic Stock Trader II",
+        "Algorithmic Stock Trader III",
+        "Algorithmic Stock Trader IV",
+        "Total Ways to Sum"]
+    function totalWaysToSum(data) {
+        const ways = [1];
+        ways.length = data + 1;
+        ways.fill(0, 1);
+        for (let i = 1; i < data; ++i) {
+            for (let j = i; j <= data; ++j) {
+                ways[j] += ways[j - i];
             }
         }
-        return sum
-
+        return ways[data];
     }
-    function stockTrader1(data) {
-        let i = 0, j = 1;
-        while (data[i] >= data[j] && j != undefined) {
-            i++; j++
+    function stockTrader(data) {
+        const k = data[0];
+        const prices = data[1];
+        const len = prices.length;
+        if (len < 2) {
+            return 0
         }
-        let sum = [0]
-        while (data[j] != undefined) {
-            let cache = data[j] - data[i]
-            if (cache >= 0) {
-                sum.push(cache)
+        if (k > len / 2) {
+            let res = 0;
+            for (let i = 1; i < len; ++i) {
+                res += Math.max(prices[i] - prices[i - 1], 0);
             }
-            j++
-            if (data[j] == undefined) {
-                i++;
-                j = i + 1
+            return res;
+        }
+        const hold = [];
+        const rele = [];
+        hold.length = k + 1;
+        rele.length = k + 1;
+        for (let i = 0; i <= k; ++i) {
+            hold[i] = Number.MIN_SAFE_INTEGER;
+            rele[i] = 0;
+        }
+        let cur;
+        for (let i = 0; i < len; ++i) {
+            cur = prices[i];
+            for (let j = k; j > 0; --j) {
+                rele[j] = Math.max(rele[j], hold[j] + cur);
+                hold[j] = Math.max(hold[j], rele[j - 1] - cur);
             }
         }
-        if (sum.length > 0) {
-            sum.sort((a, b) => a - b)
-        }
-        return sum.pop()
+        return rele[k];
     }
     function arrayJump(array) {
         let i, j;
@@ -325,7 +321,7 @@ export async function main(ns) {
         for (let i = 0; i < A[n].length; i++)
             memo[i] = A[n][i];
         for (let i = A.length - 2; i >= 0; i--)
-            for (let     j = 0;
+            for (let j = 0;
                 j < A[i].length; j++)
                 memo[j] = A[i][j] +
                     Math.min(memo[j],
@@ -385,10 +381,22 @@ export async function main(ns) {
                             ccResult = arrayJump(ccData)
                         }
                         if (ccType == solveable[9]) {
-                            ccResult = stockTrader1(ccData)
+                            var stock1 = [1, ccData]
+                            ccResult = stockTrader(stock1)
                         }
                         if (ccType == solveable[10]) {
-                            ccResult = stockTrader2(ccData)
+                            var stock2 = [ccData.length + 1, ccData]
+                            ccResult = stockTrader(stock2)
+                        }
+                        if (ccType == solveable[11]) {
+                            var stock3 = [2, ccData]
+                            ccResult = stockTrader(stock3)
+                        }
+                        if (ccType == solveable[12]) {
+                            ccResult = stockTrader(ccData)
+                        }
+                        if (ccType == solveable[13]) {
+                            ccResult = totalWaysToSum(ccData)
                         }
                         if (ccResult != null) {
                             let ccTry = ns.codingcontract.attempt(ccResult, ccFile, ccServer.name, { returnReward: true })
@@ -414,10 +422,6 @@ export async function main(ns) {
     }
 }
 /* list of missing contract types on my script
-[ 'Algorithmic Stock Trader II',
- 'Algorithmic Stock Trader III',
- 'Algorithmic Stock Trader IV',
- 'Find All Valid Math Expressions',
- 'Sanitize Parentheses in Expression',
- 'Total Ways to Sum']
+['Find All Valid Math Expressions',
+'Sanitize Parentheses in Expression']
  */
