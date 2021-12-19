@@ -5,8 +5,13 @@ const argsSchema = [
     ['maxServersAmount', 25],   // ( --maxAmount n ) buy up to n Servers
     ['namePrefix', 'pserv'],    // ( --namePreFix *any* ) prefix of the servers name
     ['startAtRam', 32],         // ( --startAt n ) starting with n GB RAM of purchasing servers
-    ['maxToRam', 1048576]       // ( -- maxToRam n ) will buy to n GB of ram (i advice about 32TB, because 25 Servers with 32TB sure cost alot 😂)
+    ['maxToRam', 1048576]       // ( -- maxToRam n ) will buy to n GB of ram (i advice about 4096, because 25 Servers with 4TiB sure cost alot 😂)
 ]
+
+export function autocomplete(data, args) {
+    data.flags(argsSchema);
+    return [];
+}
 
 const byteFormat = ["GB", "TiB", "PiB"]
 
@@ -31,10 +36,6 @@ function allAtMaxRam(servers, maxRam, ns) {
     return trutharray.some(a => a == false)
 }
 
-export function autocomplete(data, args) {
-    data.flags(argsSchema);
-    return [];
-}
 
 export async function main(ns) {
     ns.disableLog("ALL")
