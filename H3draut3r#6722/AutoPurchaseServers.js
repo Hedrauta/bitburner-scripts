@@ -1,5 +1,5 @@
 /** @param {NS} ns **/
-
+/** @param {import(".").NS } ns */
 const argsSchema = [
     ['useMoneyPercentage', 100],// ( --useMoney n ) how much n% money from players will be used to upgrade/buy a new server.
     ['maxServersAmount', 25],   // ( --maxAmount n ) buy up to n Servers
@@ -28,7 +28,10 @@ function isZero(index) {
     else { return index }
 }
 function allAtMaxRam(servers, maxRam, ns) {
-    let trutharray = [true]
+    let trutharray = []
+    if (servers.length == 0) {
+        trutharray.push(false)
+    }
     for (var srvr of servers) {
         let curRam = ns.getServerMaxRam(srvr)
         trutharray.push(curRam >= maxRam)
@@ -36,6 +39,13 @@ function allAtMaxRam(servers, maxRam, ns) {
     return trutharray.some(a => a == false)
 }
 
+function infDivideByValue(num, value) {
+    let numc = JSON.parse(JSON.stringify(num))
+    while (numc >= 1) {
+        numc /= value
+    }
+    return numc
+}
 
 export async function main(ns) {
     ns.disableLog("ALL")
@@ -43,6 +53,25 @@ export async function main(ns) {
     ns.enableLog("deleteServer")
     let pservers, player, currentRam;
     let option = ns.flags(argsSchema);
+    if (infDivideByValue(option.startAtRam, 2) != 0.5) {
+        let cache = 0
+        for (var i = 1; cache <= option.startAtRam; i++) {
+            cache = Math.pow(2, i)
+        }
+        ns.tprint(option.startAtRam + " is not a power of 2 or at least 2GB. Starting at the next greater value: " + cache + "GB")
+        option.startAtRam = cache
+    }
+    if (infDivideByValue(option.maxToRam, 2) != 0.5) {
+        let cache = 0
+        for (var i = 1; cache <= option.maxToRam; i++) {
+            cache = Math.pow(2, i)
+        }
+        if (cache > 1048576) {
+            cache = 1048576
+        }
+        ns.tprint(option.maxToRam + " is not a valid value or higher than 2^20. Buying servers until: " + cache + "GB")
+        option.maxToRam = cache
+    }
     let buyPerc = option.useMoneyPercentage / 100
     let doItTwice = 0
     do {
