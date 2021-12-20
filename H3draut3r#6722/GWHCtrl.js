@@ -300,12 +300,9 @@ export async function main(ns) {
           }
           else if (mht > hcsctp) {
             start(hname, scsrv.name, hcsctp, tserv.name, ns);
-            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(hcsctp, 5) + " 📵:" + pad((mht - hcsctp), 5));
+            mht -= hcsctp
+            ns.print("➡💱".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(hcsctp, 5) + " 📵:" + pad((mht), 5));
             await ns.sleep(1)
-          }
-          if (hcsctp > 0) {
-            update_RAM(ns); // update ram & sctp for grow if we started any threads 
-            sctp = threadPossible(scsrv, swname, ns)
           }
         } // end if hack
           sctp = threadPossible(scsrv, swname, ns); // script-servers possible threads for weaken/grow
@@ -337,16 +334,14 @@ export async function main(ns) {
           }
           else if (mgt > sctp) {
             start(gname, scsrv.name, sctp, tserv.name, ns);
-            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncgt - sctp), 5));
+            ncgt -= sctp
+            ns.print("➡💰💹".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((mgt), 5));
             timing_array.havail = false;
             timing_array.wavail = true
             await ns.sleep(1)
           }
-          if (sctp > 0) {
-            update_RAM(ns); // update ram & sctp for hack if we started any threads 
-            sctp = threadPossible(scsrv, swname, ns); //  for hack (it's 0.05GB less in size);
-          }
         } // end grow
+          sctp = threadPossible(scsrv, swname, ns); // script-servers possible threads for weaken/grow  
           current_security = ns.getServerSecurityLevel(tserv.name); // Targets Server current security
           grw_security = 0; // init
           swt = calculateThreads(script_servers, swname, tserv.name); // sum of weakning threads "" ""
@@ -381,7 +376,8 @@ export async function main(ns) {
           }
           else if (mwt > sctp) {
             start(wname, scsrv.name, sctp, tserv.name, ns);
-            ns.print("➡🔒🔽".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((ncwt - sctp), 5));
+            mwt -= sctp
+            ns.print("➡🔒🔽".padEnd(8) + "@" + scsrv.name + "\n" + "↪ 🔑:".padStart(10) + tserv.name.padEnd(20) + "📲:" + pad(sctp, 5) + " 📵:" + pad((mwt), 5));
             await ns.sleep(1)
           }
         } // end for weaken 
