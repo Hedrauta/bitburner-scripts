@@ -16,7 +16,80 @@ export async function main(ns) {
         "Algorithmic Stock Trader II",
         "Algorithmic Stock Trader III",
         "Algorithmic Stock Trader IV",
-        "Total Ways to Sum"]
+        "Total Ways to Sum",
+        "Sanitize Parentheses in Expression",
+        "Find All Valid Math Expressions"]
+
+    function mathExpressions(data) {
+        const num = String(data[0]); // Array.from(String(data).padStart(4,0), Number)
+        const target = data[1];
+
+        function helper(res, path, num, target, pos, evaluated, multed) {
+            if (pos === num.length) {
+                if (target === evaluated) {
+                    res.push(path);
+                }
+            }
+
+            for (let i = pos; i < num.length; ++i) {
+                if (i != pos && num[pos] == "0") {
+                    break;
+                }
+                const cur = parseInt(num.substring(pos, i + 1));
+
+                if (pos === 0) {
+                    helper(res, path + cur, num, target, i + 1, cur, cur);
+                } else {
+                    helper(res, path + "+" + cur, num, target, i + 1, evaluated + cur, cur);
+                    helper(res, path + "-" + cur, num, target, i + 1, evaluated - cur, -cur);
+                    helper(res, path + "*" + cur, num, target, i + 1, evaluated - multed + multed * cur, multed * cur);
+                }
+            }
+        }
+        const result = [];
+        helper(result, "", num, target, 0, 0, 0);
+        return result;
+    }
+    function SanitizeParensSolver(data) {
+        var left = 0
+        var right = 0
+        var res = []
+        for (var i = 0; i < data.length; ++i) {
+            if (data[i] === '(') {
+                ++left
+            } else if (data[i] === ')') {
+                left > 0 ? --left : ++right
+            }
+        }
+
+        function dfs(pair, index, left, right, s, solution, res) {
+            if (s.length === index) {
+                if (left === 0 && right === 0 && pair === 0) {
+                    for (var i = 0; i < res.length; i++) {
+                        if (res[i] === solution) {
+                            return
+                        }
+                    }
+                    res.push(solution)
+                }
+                return
+            }
+            if (s[index] === '(') {
+                if (left > 0) {
+                    dfs(pair, index + 1, left - 1, right, s, solution, res)
+                }
+                dfs(pair + 1, index + 1, left, right, s, solution + s[index], res)
+            } else if (s[index] === ')') {
+                if (right > 0) dfs(pair, index + 1, left, right - 1, s, solution, res)
+                if (pair > 0) dfs(pair - 1, index + 1, left, right, s, solution + s[index], res)
+            } else {
+                dfs(pair, index + 1, left, right, s, solution + s[index], res)
+            }
+        }
+
+        dfs(0, 0, left, right, data, '', res)
+        return res
+    }
     function totalWaysToSum(data) {
         const ways = [1];
         ways.length = data + 1;
@@ -398,6 +471,12 @@ export async function main(ns) {
                         if (ccType == solveable[13]) {
                             ccResult = totalWaysToSum(ccData)
                         }
+                        if (ccType == solveable[14]) {
+                            ccResult = SanitizeParensSolver(ccData)
+                        }
+                        if (ccType == solveable[15]) {
+                            ccResult = mathExpressions(ccData)
+                        }
                         if (ccResult != null) {
                             let ccTry = ns.codingcontract.attempt(ccResult, ccFile, ccServer.name, { returnReward: true })
                             if (ccTry == null || ccTry == "") {
@@ -421,7 +500,3 @@ export async function main(ns) {
         await ns.sleep(10000);
     }
 }
-/* list of missing contract types on my script
-['Find All Valid Math Expressions',
-'Sanitize Parentheses in Expression']
- */
