@@ -5,7 +5,7 @@ const argsSchema = [
     ['maxServersAmount', 25],   // ( --maxAmount n ) buy up to n Servers
     ['namePrefix', 'pserv'],    // ( --namePreFix *any* ) prefix of the servers name
     ['startAtRam', 32],         // ( --startAt n ) starting with n GB RAM of purchasing servers
-    ['maxToRam', 1048576]       // ( -- maxToRam n ) will buy to n GB of ram (i advice about 4096, because 25 Servers with 4TiB sure cost alot 😂)
+    ['maxToRam', 1048576]       // ( -- maxToRam n ) will buy to n GB of ram (i advice about 32TB, because 25 Servers with 4096GB sure cost alot 😂)
 ]
 
 export function autocomplete(data, args) {
@@ -56,7 +56,7 @@ export async function main(ns) {
             if (server == undefined && (pservers[isZero(i) - 1] != undefined || i == 0)) {
                 let cost = ns.getPurchasedServerCost(option.startAtRam)
                 if (player.money * buyPerc > cost) {
-                    var t = ns.purchaseServer(option.namePrefix + "-" + i + "-" + option.startAtRam + "GB", option.startAtRam) // example of a "new" bought : pserv-0-32GB
+                    var t = ns.purchaseServer(option.namePrefix + "-" + option.startAtRam + "GB", option.startAtRam) // example of a "new" bought : pserv-0-32GB
                     if (t == "") {
                         ns.print("WARNING: Failed to buy a new Server, you may not have enough money")
                     }
@@ -81,7 +81,7 @@ export async function main(ns) {
                                 ns.killall(server)
                             }
                             if (t == true) {
-                                var u = ns.purchaseServer(option.namePrefix + "-" + i + "-" + nextRam + ramSuffix, currentRam * 2)
+                                var u = ns.purchaseServer(option.namePrefix + "-" + nextRam + ramSuffix, currentRam * 2)
                                 if (u == "") {
                                     ns.print("WARNING: Failed to buy an upgrade for Server" + server + ", you may not had enough money" +
                                         "\nIt will get rebought at 32GB and upgraded again")

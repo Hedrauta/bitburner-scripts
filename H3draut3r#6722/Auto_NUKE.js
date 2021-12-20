@@ -26,7 +26,7 @@ export async function main(ns) {
         return ns.hasRootAccess(hostname)
     }
     function allNuked() {
-        return allServers(ns).map(asm => rooted(asm, ns)).every(asmf => asmf == true)
+        return allServers(ns).map(asm => {return rooted(asm, ns)}).every(asme => asme == true)
     }
     // end functions, now an array for use in loop
     const pr = ["BruteSSH.exe", "FTPCrack.exe", "HTTPWorm.exe", "SQLInject.exe", "relaySMTP.exe"];
@@ -37,9 +37,9 @@ export async function main(ns) {
     ns.disableLog("sleep");
     ns.disableLog("getHackingLevel");
 
-    while (allNuked()) { // i do really love this one 😂
+    while (!allNuked()) { // i do really love this one 😂
         for (const server of nos()) { // for every server in the nos()-result
-            if (!rooted(server)) { // ignore rooted servers. can't run backdoor. Do it on your own...
+            if (!rooted(server, ns)) { // ignore rooted servers. can't run backdoor. Do it on your own...
                 let info = ns.getServer(server);
                 let nports = ns.getServerNumPortsRequired(server); // also self-explained
 
