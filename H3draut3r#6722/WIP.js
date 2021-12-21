@@ -1,28 +1,27 @@
 /** @param {import(".").NS } ns */
 
-
 const argsSchema = [
   ["width", 52],
   ["height", 20],
   ["timeSpanSecs", 47]
 ]
-export async function autocomplete(data,args) {
+export async function autocomplete(data, args) {
   data.flags(argsSchema);
   return [];
 }
-function createEmptyArray (width){
+function createEmptyArray(width) {
   let array = []
-  for ( var i = 0; i<= width; i++) {
+  for (var i = 0; i <= width; i++) {
     array.push(" ")
   }
   return array
 }
-function createEmpty2DArray (width, height) {
-let array = []
-for (var i = 0; i<=height; i++) {
-  array.push(createEmptyArray(width))
-}
-return array
+function createEmpty2DArray(width, height) {
+  let array = []
+  for (var i = 0; i <= height; i++) {
+    array.push(createEmptyArray(width))
+  }
+  return array
 }
 
 function minMaxWhatever(array, miax, ns) {
@@ -32,12 +31,10 @@ function minMaxWhatever(array, miax, ns) {
   for (var i = 0; hit && i < 20; i++) {
     cache = Math.pow(10, i)
     if (miax == "min" && array.some(ms => cache >= ms)) {
-      if (cache >= 1000) { cache = ns.nFormat(cache, "$0a") }
       hit = false
-      return "$" + cache
+      return cache
     }
     if (miax == "max" && !array.some(ms => ms >= cache)) {
-      if (cache >= 1000) { cache = ns.nFormat(cache, "$0a") }
       hit = false
       return cache
     }
@@ -47,7 +44,7 @@ function minMaxWhatever(array, miax, ns) {
 
 
 export async function main(ns) {
-  options = ns.flags(argsSchema)
+  let options = ns.flags(argsSchema)
   ns.disableLog("sleep")
   if (options.timeSpanSecs < options.width - 6) {
     ns.tprint("The time can't be lower than " + (width - 5) + " seconds. Please use a higher time or lower width to " + options.timeSpanSecs)
@@ -63,7 +60,7 @@ export async function main(ns) {
   let moneyArray = []
   let timeArray = []
   while (true) {
-    if (timeArray[timeArray.length - 1] + interval == Date.now && timeArray[0] == undefined) {
+    if (timeArray[timeArray.length - 1] + interval == Date.now || timeArray[0] == undefined) {
       ns.clearLog()
       let currentTime = Date.now()
       let player = ns.getPlayer()
@@ -73,79 +70,50 @@ export async function main(ns) {
       }
       moneyArray.push(player.money)
       timeArray.push(currentTime)
-      let heightMax = minMaxWhatever(moneyArray, "max", ns).substring(1))
+      let heightMax = minMaxWhatever(moneyArray, "max", ns)
       let heightMin = minMaxWhatever(moneyArray, "min", ns)
       let heightSplit = (heightMax - heightMin) / (options.height - 1)
+      let compiledLine = []
+      let compiledBlock = []
       for (var horizontal in emptyGraph) {
         for (var vertical in horizontal) {
           for (var money in moneyArray) {
-            if (horizontal.length - money - 1 == vertical) {
-
+            if (vertical.length - money - 1 == vertical) {
+              if (moneyArray[money] < (heightMax - (horizontal * heightSplit) && moneyArray[money] > (heightMax - ((horizontal + 1) * heightSplit)))) {
+                if (money == 0) {
+                  emptyGraph[horizontal][vertical] = "/"
+                }
+                if (emptyGraph[horizontal][vertical-1] == ('/'||'‾')){
+                  emptyGraph[horizontal][vertical] = "‾"
+                }
+                else if (emptyGraph[horizontal][vertical-1] == ('\\'||'_')){
+                  emptyGraph[horizontal][vertical] = "_"
+                }
+                else if (emptyGraph[horizontal] == " "){
+                  emptyGraph[horizontal][vertical] = "/"
+                }
+                else if (moneyArray[vertical.length-money-2] > moneyArray[vertical.length-money-1]){
+                  emptyGraph[horizontal][vertical] = "\\"
+                }
+                else if (moneyArray[vertical.length-money-2] < moneyArray[vertical.length-money-1]){
+                  emptyGraph[horizontal][vertical] = "/"
+                }
+              }
             }
           }
         }
+        compiledLine.push(emptyGraph[horizontal].join(""))
       }
-        1 0
-        0
+    compiledBlock.push(emptyGraph.join("\n"))
+    ns.print(compiledBlock[0])
     }
     await ns.sleep(10)
   }
 }
 
+// section for saving strings
 /*
-/ ˉ \ _ 
-
-100m|
-    |
-    |
-    |
-    |
-    |
-    |
-    |
-    |
-    |
-    |                 
-    |               /
-    |     /\/\_/ˉˉˉˉ
-    |    /       
-    |   /
-    |  /
-    | /
-    |/
- 10m|
-    ∟−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−−
-
-padstart 4 (showing money min/10 and max) 
-drawing graph ( function, push in array, add \n on each line)
-  left side | only  
-  /
-  \
-  -
-   
-  bottom line _ only > 
-
-
-2d graph array [
-[" "]*width - 5
-*
-height
-]
-
-
-
-
-  interval timeSpanSecs / (width - 5) * 1000
-  while ()
-    if (any array.length > 47)
-      shift each aray
-    save player.money now if now > lastsave + interval 
-    save current interval
-
-  
-
-
-
-
+/  \ _ 
+emptyGraph[horizontal][vertical-1]
 
 */
