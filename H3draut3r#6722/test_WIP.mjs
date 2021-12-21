@@ -42,7 +42,7 @@ function randomMoney(max, count) {
 
 async function main() {
 
-  let moneyArray = randomMoney(50000, 5)
+  let moneyArray = JSON.parse(JSON.stringify(randomMoney(50000, 5)))
   console.log(moneyArray)
   let interval = options.timeSpanSecs / options.width - 6 * 1000
   let lastTime = 0
@@ -69,7 +69,7 @@ async function main() {
           for (let money in moneyArray) {
             if (emptyGraph[horizontal].length - money - 1 == vertical) {
               if (moneyArray[money] < (heightMax - (parseInt(horizontal) * heightSplit)) && moneyArray[money] > (heightMax - ((parseInt(horizontal) + 1) * heightSplit))) {
-                if (money == 0) {1
+                if (parseInt(money) == 0) {1
                   emptyGraph[horizontal][vertical] = "/"
                 }
                 else if (emptyGraph[horizontal][vertical - 1] == ('/' || '‾')) {
