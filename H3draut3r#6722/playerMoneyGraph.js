@@ -1,11 +1,12 @@
 /** @param {import(".").NS } ns */
 
 const argsSchema = [
-  ["breite", 51],
+  ["breite", 52],
   ["hoehe", 21],
   ["timeSpanSecs", 47],
   ["debug", false]
 ]
+
 export function autocomplete(data, args) {
   data.flags(argsSchema);
   return [];
@@ -18,6 +19,7 @@ function createEmptyArray(breite) {
   }
   return array
 }
+
 function createEmpty2DArray(breite, hoehe) {
   let array = []
   for (var i = 0; i < hoehe; i++) {
@@ -30,7 +32,7 @@ function minMaxWhatever(array, miax) {
   let hit = true
   let cache = 0
 
-  for (var i = 0; hit && i < 20; i++) {
+  for (var i = 0; hit; i++) {
     cache = Math.pow(10, i)
     if (miax == "min" && array.some(ms => cache * 10 >= ms)) {
       hit = false
@@ -42,51 +44,52 @@ function minMaxWhatever(array, miax) {
     }
   }
 }
+
 function horizontalAdd(row, hoehe, hoeheMax, hoeheMin, ns) {
   if (parseInt(row) == 0) {
-    return ns.nFormat(hoeheMax, "$0a").padStart(6, " ")
+    return ns.nFormat(hoeheMax, "$0a").padStart(5, " ")
   }
   else if (parseInt(row) == hoehe) {
-    return ns.nFormat(hoeheMin, "$0a").padStart(6, " ")
+    return ns.nFormat(hoeheMin, "$0a").padStart(5, " ")
   }
   else {
-    return "\|".padStart(6, " ")
+    return "\|".padStart(5, " ")
   }
 }
-
 
 export async function main(ns) {
   let options = ns.flags(argsSchema)
   ns.disableLog("sleep")
-  if (options.timeSpanSecs < options.breite - 6) {
+  if (options.timeSpanSecs < options.breite - 5) {
     ns.tprint("The time can't be lower than " + (breite - 5) + " seconds. Please use a higher time or lower breite to " + options.timeSpanSecs)
     ns.exit()
   }
-  if (options.breite < 6 || options.hoehe < 4) {
+  if (options.breite < 6 || options.hoehe < 3) {
     ns.tprint("ERROR: Can't process a graph with too low breite or hoehe")
     ns.exit()
   }
-
-  let interval = options.timeSpanSecs / (options.breite - 6) * 1000
-  let moneyArray = [0]
+  let interval = options.timeSpanSecs / (options.breite - 5) * 1000
+  let player = ns.getPlayer()
+  let moneyArray = []
+  moneyArray.push(parseInt(player.money))
   let lastTime = 0
   while (true) {
     let compiledBlock = []
     let compiledLine = []
     if (lastTime + interval <= Date.now()) {
-      let emptyGraph = JSON.parse(JSON.stringify(createEmpty2DArray(options.breite - 6, options.hoehe - 1)))
+      let emptyGraph = JSON.parse(JSON.stringify(createEmpty2DArray(options.breite - 6, options.hoehe)))
       let currentTime = Date.now()
       lastTime = currentTime
       ns.clearLog()
-      let player = ns.getPlayer()
-      if (moneyArray.length > options.breite - 6) {
+      player = ns.getPlayer()
+      if (moneyArray.length > options.breite - 5) {
         moneyArray.shift(0, 1)
       }
       moneyArray.push(parseInt(player.money))
       if (options.debug) { console.log(moneyArray) }
       let hoeheMax = minMaxWhatever(moneyArray, "max")
       let hoeheMin = minMaxWhatever(moneyArray, "min")
-      let hoeheSplit = (hoeheMax - hoeheMin) / (options.hoehe - 1)
+      let hoeheSplit = (hoeheMax - hoeheMin) / (options.hoehe)
       for (let horizontal in emptyGraph) {
         for (let vertical in emptyGraph[horizontal]) {
           for (let money in moneyArray) {
@@ -117,15 +120,12 @@ export async function main(ns) {
             }
           }
         }
-        emptyGraph[horizontal].unshift(horizontalAdd(horizontal, (options.hoehe - 2), hoeheMax, hoeheMin, ns))
+        emptyGraph[horizontal].unshift(horizontalAdd(horizontal, (options.hoehe - 1), hoeheMax, hoeheMin, ns))
         compiledLine.push(emptyGraph[horizontal].join(""))
       }
-      let lastline = ["      " + "".padEnd(options.breite - 6, "\‾")]
-      compiledLine.push(lastline)
       compiledBlock = compiledLine.join("\n")
       ns.print("\n" + compiledBlock)
     }
     await ns.sleep(10)
   }
 }
-
