@@ -82,7 +82,7 @@ export async function main(ns) {
       lastTime = currentTime
       ns.clearLog()
       player = ns.getPlayer()
-      if (moneyArray.length >= options.breite - 5) {
+      if (moneyArray.length > options.breite - 5) {
         moneyArray.shift(0, 1)
       }
       moneyArray.push(parseInt(player.money))
@@ -98,10 +98,10 @@ export async function main(ns) {
                 if (parseInt(money) == 0) {
                   emptyGraph[horizontal][vertical] = "\/"
                 }
-                else if (emptyGraph[horizontal][vertical - 1] == '\/' || emptyGraph[horizontal][vertical - 1] == '\‾') {
+                else if (moneyArray[money] >= moneyArray[money - 1] &&(emptyGraph[horizontal][vertical - 1] == '\/' || emptyGraph[horizontal][vertical - 1] == '\‾')) {
                   emptyGraph[horizontal][vertical] = "\‾"
                 }
-                else if (emptyGraph[horizontal][vertical - 1] == '\\' || emptyGraph[horizontal][vertical - 1] == '\_') {
+                else if (moneyArray[money] <= moneyArray[money - 1] && (emptyGraph[horizontal][vertical - 1] == '\\' || emptyGraph[horizontal][vertical - 1] == '\_')) {
                   emptyGraph[horizontal][vertical] = "\_"
                 }
                 else if (emptyGraph[horizontal][vertical - 1] == '\‾' && moneyArray[money] < moneyArray[money - 1]) {
