@@ -1,12 +1,17 @@
 /** @param {NS} ns **/
+argSchema = [
+	['use', 10], // if n % of players money doesnt exceed the cost of upgrading level/ram/cores, it will buy it
+	// can be overwritten by --use n (n % of players money)
+	['debug', false] // for debug-use
+]
+export function autocomplete(data, args) {
+	data.flags(argSchema)
+	return []
+}
 export async function main(ns) {
 	// basic buying first (if the cost doesn't exceed a set percentage amount of current money, do upgrade)
 
-	let arg = ns.flags([ // options to add as a flag
-		['use', 10], // if n % of players money doesnt exceed the cost of upgrading level/ram/cores, it will buy it
-		// can be overwritten by --use n (n % of players money)
-        ['debug', false] // for debug-use
-	]);
+	let arg = ns.flags(argSchema);
 	let nhn = ns.hacknet // saves Ram <.<
 	//check if --use is not a invalid number (0 or >100) and do exit if so
 	if (arg.use == 0 || arg.use > 100) {
