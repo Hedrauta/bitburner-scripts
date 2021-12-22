@@ -33,8 +33,10 @@ function allAtMaxRam(servers, maxRam, ns) {
         trutharray.push(false)
     }
     for (var srvr of servers) {
-        let curRam = ns.getServerMaxRam(srvr)
-        trutharray.push(curRam >= maxRam)
+        let truth = false
+        try { truth = (ns.getServerMaxRam(srvr) >= maxRam) }
+        catch { truth = false }
+        trutharray.push(truth)
     }
     return trutharray.some(a => a == false)
 }
