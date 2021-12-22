@@ -34,7 +34,7 @@ function minMaxWhatever(array, miax) {
 
   for (var i = 0; hit; i++) {
     cache = Math.pow(10, i)
-    if (miax == "min" && array.some(ms => cache * 10 >= ms)) {
+    if (miax == "min" && array.some(ms => cache * 10 > ms)) {
       hit = false
       return cache
     }
@@ -94,7 +94,7 @@ export async function main(ns) {
         for (let vertical in emptyGraph[horizontal]) {
           for (let money in moneyArray) {
             if (emptyGraph[horizontal].length - (moneyArray.length - money) == vertical) {
-              if (moneyArray[money] < (hoeheMax - (parseInt(horizontal) * hoeheSplit)) && moneyArray[money] > (hoeheMax - ((parseInt(horizontal) + 1) * hoeheSplit))) {
+              if (moneyArray[money] <= (hoeheMax - (parseInt(horizontal) * hoeheSplit)) && moneyArray[money] >= (hoeheMax - ((parseInt(horizontal) + 1) * hoeheSplit))) {
                 if (parseInt(money) == 0) {
                   emptyGraph[horizontal][vertical] = "\/"
                 }
@@ -110,10 +110,10 @@ export async function main(ns) {
                 else if (emptyGraph[horizontal][vertical - 1] == '\_' && moneyArray[money] > moneyArray[money - 1]) {
                   emptyGraph[horizontal][vertical] = "\/"
                 }
-                else if (moneyArray[money] < moneyArray[money - 1]) {
+                else if (moneyArray[money] <= moneyArray[money - 1]) {
                   emptyGraph[horizontal][vertical] = "\\"
                 }
-                else if (moneyArray[money] > moneyArray[money - 1]) {
+                else if (moneyArray[money] >= moneyArray[money - 1]) {
                   emptyGraph[horizontal][vertical] = "\/"
                 }
               }
