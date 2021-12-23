@@ -84,7 +84,7 @@ export async function main(ns) {
       lastTime = currentTime
       ns.clearLog()
       player = ns.getPlayer()
-      if (moneyArray.length > options.breite - 5) {
+      if (moneyArray.length >= options.breite) {
         moneyArray.shift(0, 1)
       }
       moneyArray.push(parseInt(player.money))
