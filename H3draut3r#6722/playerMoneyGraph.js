@@ -1,9 +1,9 @@
 /** @param {import(".").NS } ns */
 
 const argsSchema = [
-  ["breite", 52],
+  ["breite", 46],
   ["hoehe", 21],
-  ["timeSpanSecs", 47],
+  ["timeSpanSecs", 46],
   ["debug", false]
 ]
 
@@ -60,15 +60,17 @@ function horizontalAdd(row, hoehe, hoeheMax, hoeheMin, ns) {
 export async function main(ns) {
   let options = ns.flags(argsSchema)
   ns.disableLog("sleep")
-  if (options.timeSpanSecs < options.breite - 5) {
-    ns.tprint("The time can't be lower than " + (breite - 5) + " seconds. Please use a higher time or lower breite to " + options.timeSpanSecs)
+  if (options.timeSpanSecs - options.breite < 0) {
+    ns.tprint("The timespan per column can't be lower than 1 second. Please use a higher time or lower breite to " + options.timeSpanSecs)
+    ns.print("The timespan per column can't be lower than 1 second. Please use a higher time or lower breite to " + options.timeSpanSecs)
     ns.exit()
   }
-  if (options.breite < 6 || options.hoehe < 3) {
+  if (options.breite < 1 || options.hoehe < 2) {
     ns.tprint("ERROR: Can't process a graph with too low breite or hoehe")
+    ns.print("ERROR: Can't process a graph with too low breite or hoehe")
     ns.exit()
   }
-  let interval = options.timeSpanSecs / (options.breite - 5) * 1000
+  let interval = options.timeSpanSecs / options.breite * 1000
   let player = ns.getPlayer()
   let moneyArray = []
   moneyArray.push(parseInt(player.money))
@@ -77,7 +79,7 @@ export async function main(ns) {
     let compiledBlock = []
     let compiledLine = []
     if (lastTime + interval <= Date.now()) {
-      let emptyGraph = JSON.parse(JSON.stringify(createEmpty2DArray(options.breite - 6, options.hoehe)))
+      let emptyGraph = JSON.parse(JSON.stringify(createEmpty2DArray(options.breite, options.hoehe)))
       let currentTime = Date.now()
       lastTime = currentTime
       ns.clearLog()
