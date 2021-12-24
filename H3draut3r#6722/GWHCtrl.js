@@ -107,12 +107,12 @@ export async function main(ns) {
   function nos() {
     let owned_servers = ["home"];
     ns.getPurchasedServers().map(gps => owned_servers.push(gps));
-    return allServers(ns).filter(asf => owned_servers.indexOf(asf) < 0)
+    return allServers(ns).filter(asf => rooted(asf) && owned_servers.indexOf(asf) < 0)
   }
 
   // filter for non-owned servers with maxmoney > 0 ("target server")
   function nots() {
-    return nos().filter(nf => (rooted(asf) && ns.getServerRequiredHackingLevel(nf) <= player(ns).hacking) && ns.getServerMaxMoney(nf) > 0)
+    return nos().filter(nf => ( ns.getServerRequiredHackingLevel(nf) <= player(ns).hacking) && ns.getServerMaxMoney(nf) > 0)
       .map(nfm => { return { name: nfm, values: ns.getServer(nfm), } })
   }
 
