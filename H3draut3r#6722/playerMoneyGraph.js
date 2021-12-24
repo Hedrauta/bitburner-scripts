@@ -1,9 +1,9 @@
 /** @param {import(".").NS } ns */
 
 const argsSchema = [
-  ["breite", 46],
+  ["breite", 45],
   ["hoehe", 21],
-  ["timeSpanSecs", 46],
+  ["timeSpanSecs", 45],
   ["debug", false]
 ]
 
@@ -28,32 +28,73 @@ function createEmpty2DArray(breite, hoehe) {
   return array
 }
 
-function minMaxWhatever(array, miax) {
-  let hit = true
-  let cache = 0
+function minMaxWhatever(array) {
+  var clone = [...array]
+  clone.sort((a,b) => a-b)
+  return [clone[0], clone[clone.length-1]]
 
-  for (var i = 0; hit; i++) {
-    cache = Math.pow(10, i)
-    if (miax == "min" && array.some(ms => cache * 10 > ms)) {
-      hit = false
-      return cache
-    }
-    if (miax == "max" && !array.some(ms => ms >= cache)) {
-      hit = false
-      return cache
-    }
-  }
+}
+let moneySuffix = ["k", "m", "b", "t", "q", "Q", "s", "S", "o", "n"]
+function logBaseValue(base, value) {
+  return Math.floor(Math.log(value) / Math.log(base))
+}
+function formatNumber(base, value) {
+  return value / Math.pow(base, logBaseValue(base, value))
 }
 
-function horizontalAdd(row, hoehe, hoeheMax, hoeheMin, ns) {
-  if (parseInt(row) == 0) {
-    return ns.nFormat(hoeheMax, "$0a").padStart(5, " ")
-  }
-  else if (parseInt(row) == hoehe) {
-    return ns.nFormat(hoeheMin, "$0a").padStart(5, " ")
+
+function horizontalAdd(row, hoehe, hoeheMax, hoeheMin) {
+  let suf_min, suf_max, conv_min, conv_max
+  if (hoeheMin >= 1000){
+    suf_min = moneySuffix[logBaseValue(1000, hoeheMin)-1]
+    var temp = formatNumber(1000, hoeheMin)
+    console.log(temp, 100> temp >=10)
+    if (temp >= 100) {
+      conv_min = temp.toFixed(0)
+    }
+    else if (100 > temp && temp >= 10) {
+      conv_min = temp.toFixed(1)
+    }
+    else {conv_min = temp.toFixed(2)}
   }
   else {
-    return "\|".padStart(5, " ")
+    suf_min = "|"
+    if (hoeheMin >= 100) {
+      conv_min = hoeheMin.toFixed(0)
+    }
+    else if (100 > hoeheMin && hoeheMin >= 10) {
+      conv_min = hoeheMin.toFixed(1)
+    }
+    else {conv_min = hoeheMin.toFixed(2)}
+  }
+  if (hoeheMax >= 1000) {
+    suf_max = moneySuffix[logBaseValue(1000, hoeheMax)-1]
+    var temp = formatNumber(1000, hoeheMax)
+    if (temp >= 100) {
+      conv_max = temp.toFixed(0)
+    }
+    else if (100 > temp && temp >= 10) {
+      conv_max = temp.toFixed(1)
+    }
+    else {conv_max = temp.toFixed(2)}
+  }
+  else {
+    suf_max = "|"
+    if (hoeheMax >= 100) {
+      conv_max = hoeheMax.toFixed(0)
+    }
+    else if (100 > hoeheMax && hoeheMax >= 10) {
+      conv_max = hoeheMax.toFixed(1)
+    }
+    else {conv_max = hoeheMax.toFixed(2)}
+  }
+  if (parseInt(row) == 0) {
+    return ("$"+conv_max+suf_max).padStart(6, " ")
+  }
+  else if (parseInt(row) == hoehe) {
+    return ("$"+conv_min+suf_min).padStart(6, " ")
+  }else {
+    return "\|".padStart(6, " ")
   }
 }
 
@@ -89,8 +130,7 @@ export async function main(ns) {
       }
       moneyArray.push(parseInt(player.money))
       if (options.debug) { console.log(moneyArray) }
-      let hoeheMax = minMaxWhatever(moneyArray, "max")
-      let hoeheMin = minMaxWhatever(moneyArray, "min")
+      let [hoeheMin, hoeheMax] = minMaxWhatever(moneyArray)
       let hoeheSplit = (hoeheMax - hoeheMin) / (options.hoehe)
       for (let horizontal in emptyGraph) {
         for (let vertical in emptyGraph[horizontal]) {
@@ -119,11 +159,13 @@ export async function main(ns) {
                   emptyGraph[horizontal][vertical] = "\/"
                 }
               }
+              else if (horizontal > 0 && (emptyGraph[horizontal-1][vertical] != " " || emptyGraph[horizontal-1][vertical] == "\║")) {
+                emptyGraph[horizontal][vertical] = "\║"
+              }
             }
           }
         }
-        emptyGraph[horizontal].unshift(horizontalAdd(horizontal, (options.hoehe - 1), hoeheMax, hoeheMin, ns))
-        compiledLine.push(emptyGraph[horizontal].join(""))
+        compiledLine.push([horizontalAdd(horizontal, (options.hoehe - 1), hoeheMax, hoeheMin, ns), ...emptyGraph[horizontal]].join(""))
       }
       compiledBlock = compiledLine.join("\n")
       ns.print("\n" + compiledBlock)
