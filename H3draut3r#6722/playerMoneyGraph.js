@@ -131,6 +131,10 @@ export async function main(ns) {
       moneyArray.push(parseInt(player.money))
       if (options.debug) { console.log(moneyArray) }
       let [hoeheMin, hoeheMax] = minMaxWhatever(moneyArray)
+      let hoeheMinLog10 = logBaseValue(10, hoeheMin)
+      let hoeheMaxLog10 = logBaseValue(10, hoeheMax)
+      hoeheMin = Math.pow(10, hoeheMinLog10) * (formatNumber(10, hoeheMin) - .02)
+      hoeheMax = Math.pow(10, hoeheMaxLog10) * (formatNumber(10, hoeheMax) + .02)
       let hoeheSplit = (hoeheMax - hoeheMin) / (options.hoehe)
       for (let horizontal in emptyGraph) {
         for (let vertical in emptyGraph[horizontal]) {
@@ -159,8 +163,8 @@ export async function main(ns) {
                   emptyGraph[horizontal][vertical] = "\/"
                 }
               }
-              else if (horizontal > 0 && (emptyGraph[horizontal-1][vertical] != " " || emptyGraph[horizontal-1][vertical] == "\║")) {
-                emptyGraph[horizontal][vertical] = "\║"
+              else if (horizontal > 0 && (emptyGraph[horizontal-1][vertical] != " " || emptyGraph[horizontal-1][vertical] == "\░")) {
+                emptyGraph[horizontal][vertical] = "\░"
               }
             }
           }
