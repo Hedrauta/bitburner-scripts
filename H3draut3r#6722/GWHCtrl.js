@@ -31,8 +31,8 @@ export async function main(ns) {
     // if there's a number set as first argument and in range, set hperct
   }
   let gperct = 1.00;
-  if (arg.grow_to >= 1 && arg.grow_to <= 100) {
-    gperct = arg.grow_to / 100
+  if (arg.growTo >= 1 && arg.growTo <= 100) {
+    gperct = arg.growTo / 100
   }
 
   function doesExist(hostname, ns) {
@@ -210,7 +210,7 @@ export async function main(ns) {
     "\n".padEnd(6) + aSign(arg.useHome || arg.useAll).padEnd(2) + "Use home as a Script-Server ( enable with --useHome )" +
     "\n".padEnd(6) + aSign(arg.useNonOwned || arg.useAll).padEnd(2) + "Use non-owned rooted servers as a Script-Server (enable with --useNonOwned ): " +
     "\n".padEnd(4) + "🔒🔽".padEnd(5) + "Always Weaken Target-Server to minimum Security" +
-    "\n".padEnd(4) + "💰💹".padEnd(5) + "Grow up to " + arg.grow_to + "% of targets max money" +
+    "\n".padEnd(4) + "💰💹".padEnd(5) + "Grow up to " + arg.growTo + "% of targets max money" +
     "\n".padEnd(6) + "💱".padEnd(3) + "Hacking " + arg.hack + "% of targets Server money.");
   ns.tprint("INFO: Starting GWHCTRL on " + cur_host)
   ns.disableLog("getServerUsedRam");
