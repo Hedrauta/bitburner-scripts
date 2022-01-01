@@ -45,11 +45,9 @@ function script_servers(ns) {
 
 function updateRAM(script_servers, ns) {
   for (let server of script_servers) {
+    server.usedRam = ns.getServerUsedRam(server.name)
     if (server.name == "home") {
-      server.usedRam = ns.getServerUsedRam(server.name) + options.keepHomeFreeRamGB
-    }
-    else {
-      server.usedRam = ns.getServerUsedRam(server.name)
+      server.usedRam =+ options.keepHomeFreeRamGB
     }
     server.freeRam = server.maxRam - server.usedRam
   }
@@ -60,6 +58,8 @@ function updateProcessList(script_servers, ns) {
     server.processList = ns.ps(server.name)
   }
 }
+
+
 
 function getTargetServer(player, ns) {
   let targetableServers = allServers(ns)
@@ -72,14 +72,18 @@ function player(ns) {
   return ns.getPlayer()
 }
 
-function server(ns) {
-  return ns.getServer(ns)
-}
-
 function removeEntry(entry, array) {
   var index = array.map(a => a.name).indexOf(entry)
   if (index > -1) {
     array.splice(index, 1);
+  }
+}
+
+function calculateSameFluffThreads(scriptServers, fluffy, ns){
+  for (var server of script_servers) {
+    var values = server.values
+    var processList = server.processList
+    
   }
 }
 
@@ -101,19 +105,29 @@ export async function main(ns) {
         t.wstart = t.gstart = t.hstart = 0;
       }
     }
-
+    let scriptServers = [...script_servers(ns)]
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", currentServer, "/" + growFileName, script_servers(ns))
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", currentServer, "/" + weakenFileName, script_servers(ns))
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", currentServer, "/" + hackFileName, script_servers(ns))
-    if (getTargetServer(ns) != null) {
+
+    if (getTargetServer(ns.getPlayer(), ns) != (null || undefined)) {
+      updateRAM(scriptServers, ns)
+      scriptServers.sort((a,b) => a.freeRam - b.freeRam )
       for (let server of script_servers(ns)) {
         let target = [...getTargetServer(ns)]
+        target.hackPower = ns.hackAnalyze(target.name)*100
+        
         let timeTable = timing_array.filter(tf => tf.name == server.name)
         timeTable.htime = ns.getHackTime(target.name)
         [timeTable.wtime, timeTable.gtime] = [timeTable.htime*4, timeTable.htime*3.2]
-        
+        timeTable.weakenPower = ns.weakenAnalyze(1, server.values.cpuCores)
+        timeTable.neededWeakenThreadsForTarget = Math.floor((ns.getServerSecurityLevel(target.name) - target.values.minDifficulty) / timeTable.weakenPower)
+        timeTable.neededHackThreadsForTarget = Math.floor(target.values.moneyAvailable / (options.hack / target.hackPower))
+        timeTable.neededGrowThreadsForTarget = Math.ceil(ns.growthAnalyze(target.name, (target.values.moneyMax / target.values.moneyAvailable)))
+        updateProcessList(scriptServers, ns) 
+        let sumOfactiveWeakenThreadsSameFluffyArg = calculateSameFluffThreads(scriptServers, fluffyWeaken, ns)
       }
-    }
+    } 
     else {
       targetAvailable = false
       ns.tprint("No Target available... Please NUKE at least 1 Server, or start your AutoNuke");
@@ -122,3 +136,16 @@ export async function main(ns) {
     await ns.sleep(0)
   }
 }
+
+
+/* 
+
+Grow > weaken until max/min
+>
+timing, hack > grow right after hack
+timing grow (hack) > weaken right after grow 
+end of hack + 50 ms = end of weaken
+
+
+
+*/
