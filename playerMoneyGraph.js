@@ -3,7 +3,7 @@
 const argsSchema = [
   ["breite", 45],
   ["hoehe", 21],
-  ["timeSpanSecs", 45],
+  ["timeSpanScale", 1.0], // will scale the "time" with a specific "divider", so it will run slower on >1 and faster <1 (1== once per sec)
   ["debug", false]
 ]
 
@@ -101,17 +101,15 @@ function horizontalAdd(row, hoehe, hoeheMax, hoeheMin) {
 export async function main(ns) {
   let options = ns.flags(argsSchema)
   ns.disableLog("sleep")
-  if (options.timeSpanSecs - options.breite < 0) {
-    ns.tprint("The timespan per column can't be lower than 1 second. Please use a higher time or lower breite to " + options.timeSpanSecs)
-    ns.print("The timespan per column can't be lower than 1 second. Please use a higher time or lower breite to " + options.timeSpanSecs)
-    ns.exit()
+  if (options.timeSpanScale <= 0) {
+    ns.tprint("ERROR: Scaling can't be lower equal 0, please set a positive number")
   }
   if (options.breite < 1 || options.hoehe < 2) {
     ns.tprint("ERROR: Can't process a graph with too low breite or hoehe")
     ns.print("ERROR: Can't process a graph with too low breite or hoehe")
     ns.exit()
   }
-  let interval = options.timeSpanSecs / options.breite * 1000
+  let interval = options.timeSpanScale * 1000
   let player = ns.getPlayer()
   let moneyArray = []
   moneyArray.push(parseInt(player.money))
@@ -123,7 +121,6 @@ export async function main(ns) {
       let emptyGraph = JSON.parse(JSON.stringify(createEmpty2DArray(options.breite, options.hoehe)))
       let currentTime = Date.now()
       lastTime = currentTime
-      ns.clearLog()
       player = ns.getPlayer()
       if (moneyArray.length >= options.breite) {
         moneyArray.shift(0, 1)
@@ -135,6 +132,7 @@ export async function main(ns) {
       let hoeheMaxLog10 = logBaseValue(10, hoeheMax)
       hoeheMin = Math.pow(10, hoeheMinLog10) * (formatNumber(10, hoeheMin) - .02)
       hoeheMax = Math.pow(10, hoeheMaxLog10) * (formatNumber(10, hoeheMax) + .02)
+      ns.clearLog()
       let hoeheSplit = (hoeheMax - hoeheMin) / (options.hoehe)
       for (let horizontal in emptyGraph) {
         for (let vertical in emptyGraph[horizontal]) {
