@@ -88,6 +88,7 @@ function calculateSameFluffThreads(scriptServers, fluffy, ns){
 }
 
 let [growFileName, weakenFileName, hackFileName] = ["ctrl/grow_server.script", "ctrl/weaken_server.script", "ctrl/hack_server.script"]
+
 export async function main(ns) {
 
   let options = ns.flags(argSchema)
@@ -110,30 +111,8 @@ export async function main(ns) {
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", currentServer, "/" + weakenFileName, script_servers(ns))
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", currentServer, "/" + hackFileName, script_servers(ns))
 
-    if (getTargetServer(ns.getPlayer(), ns) != (null || undefined)) {
-      updateRAM(scriptServers, ns)
-      scriptServers.sort((a,b) => a.freeRam - b.freeRam )
-      for (let server of script_servers(ns)) {
-        let target = [...getTargetServer(ns)]
-        target.hackPower = ns.hackAnalyze(target.name)*100
-        
-        let timeTable = timing_array.filter(tf => tf.name == server.name)
-        timeTable.htime = ns.getHackTime(target.name)
-        [timeTable.wtime, timeTable.gtime] = [timeTable.htime*4, timeTable.htime*3.2]
-        timeTable.weakenPower = ns.weakenAnalyze(1, server.values.cpuCores)
-        timeTable.neededWeakenThreadsForTarget = Math.floor((ns.getServerSecurityLevel(target.name) - target.values.minDifficulty) / timeTable.weakenPower)
-        timeTable.neededHackThreadsForTarget = Math.floor(target.values.moneyAvailable / (options.hack / target.hackPower))
-        timeTable.neededGrowThreadsForTarget = Math.ceil(ns.growthAnalyze(target.name, (target.values.moneyMax / target.values.moneyAvailable)))
-        updateProcessList(scriptServers, ns) 
-        let sumOfactiveWeakenThreadsSameFluffyArg = calculateSameFluffThreads(scriptServers, fluffyWeaken, ns)
-      }
-    } 
-    else {
-      targetAvailable = false
-      ns.tprint("No Target available... Please NUKE at least 1 Server, or start your AutoNuke");
-      ns.exit()
-    }
-    await ns.sleep(0)
+
+
   }
 }
 
