@@ -1,8 +1,7 @@
 /** 
- * @param {import(".").NS } ns
- * @param {import(".").player } getPlayer 
- * @param {import(".").Server } values
- * @param {import(".").Server } getServer
+ * @param {import("./index").NS } ns
+ * @param {import("./index").Server } values
+ * @param {import("./index").Server } getServer
  * */
 
 let argSchema = [
@@ -61,14 +60,14 @@ function updateProcessList(script_servers, ns) {
 
 
 
-function getTargetServer(player, ns) {
+function getTargetServer(playerHackingLevel, ns) {
   let targetableServers = allServers(ns)
-    .map(casm => { return { name: casm, values: ns.getServer(casm) } })
-    .filter(casmf => casmf.values.moneyMax > 0 && casmf.values.hasAdminRights && ns.getWeakenTime(casmf.name) < 600000 && casmf.values.requiredHackingSkill <= player.hacking)
-  return targetableServers.sort((a, b) => (a.values.moneyMax * ns.hackAnalyze(a.name) / weakenTime(a.name, ns)) - (b.values.moneyMax * ns.hackAnalyze(b.name) / weakenTime(b.name))).shift()
+    .map(casm => { return { name: casm, values: ns.getServer(casm), hackAnalyze: ns.hackAnalyze(casm), hackTime = ns.getHackTime(casm)} })
+    .filter(casmf => casmf.values.moneyMax > 0 && casmf.values.hasAdminRights && casmf.hackTime*4 < 100000 && casmf.values.requiredHackingSkill <= playerHackingLevel)
+  return targetableServers.sort((a, b) => (a.values.moneyMax * a.hackAnalyze / a.hackTime*4) - (b.values.moneyMax * b.hackAnalyze / b.hackTime*4)).shift()
 }
 
-function player(ns) {
+function playerHackingLevel(ns) {
   return ns.getPlayer()
 }
 
@@ -94,25 +93,39 @@ export async function main(ns) {
   let options = ns.flags(argSchema)
   let [fluffyWeaken, fluffyGrow, fluffyHack] = [0, 0, 0]
   let currentServer = ns.getHostname()
-  let targetAvailable = true
   let timing_array = allServers(ns)
-  while (targetAvailable) {
+  while (true) {
     let oldServers = timing_array.map(tm => tm.name).filter(tf => !allServers(ns).find(af => tf == af))
     let newServers = allServers(ns).filter(af => !times.map(tm => tm.name).filter(tf => af == tf))
     newServers.map(nm => times.push({ name: nm }))
     oldServers.map(om => removeEntry(om, times))
     for (let t of timing_array) {
-      if ((t.wstart && t.gstart && t.hstart) == undefined) {
-        t.wstart = t.gstart = t.hstart = 0;
+      if ((t.weakenStart && t.growStart && t.hackStart) == undefined) {
+        t.weakenStart = t.growStart = t.hackStart = 0;
       }
     }
     let scriptServers = [...script_servers(ns)]
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", currentServer, "/" + growFileName, script_servers(ns))
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", currentServer, "/" + weakenFileName, script_servers(ns))
     await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", currentServer, "/" + hackFileName, script_servers(ns))
+    for (server of scriptServers) {
+      let timetabe = timing_array.filter(taf => taf.name == server.name)
+      let target = getTargetServer(playerHackingLevel, ns)
+      timetabe.hackTime = ns.getHackTime(target.name)
+      updateRAM(scriptServers, ns)
+      updateProcessList(scriptServers, ns)
 
+      let sumSecurity, growthMult, hackMoney
+      let neededHackThreads, neededWeakenThreads, neededGrowThreads // init vars
+      let missingHackThreads, missingWeakenThreads, missingGrowThreads
+      let runningHackThreads, runningWeakenThreads, runningGrowThreads
 
-
+      hackMoney = target.values.moneyAvailable * (options.hackPercent / target.hackAnalyze)
+      neededHackThreads = Math.floor(ns.hackAnalyzeThreads(target.name, hackMoney))
+      growthMult = (target.values.moneyMax / (target.values.moneyAvailable - hackMoney))
+      neededGrowThreads = Math.ceil(ns.growthAnalyze(target.name, growthMult))
+      
+    }
   }
 }
 
