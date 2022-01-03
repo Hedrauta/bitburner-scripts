@@ -496,7 +496,6 @@ export async function main(ns) {
                 await ns.sleep(50)
             }
         }
-        ns.print("All Servers checked, checking again after a 10 sec break")
         await ns.sleep(10000);
     }
 }
