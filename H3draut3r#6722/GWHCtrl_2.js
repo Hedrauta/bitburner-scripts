@@ -39,14 +39,14 @@ export function allServers(ns) {
 }
 
 function script_servers(ns) {
-  return allServers(ns).map(casm => { return { name: casm, rooted: ns.hasRootAccess(casm), maxRam: ns.getServerMaxRam(casm) } }).filter(casmf => casmf.rooted)
+  return allServers(ns).map(casm => { return { name: casm, rooted: ns.hasRootAccess(casm), maxRam: ns.getServerMaxRam(casm), securityPerThread: ns.weakenAnalyze(1) } }).filter(casmf => casmf.rooted)
 }
 
 function updateRAM(script_servers, ns) {
   for (let server of script_servers) {
     server.usedRam = ns.getServerUsedRam(server.name)
     if (server.name == "home") {
-      server.usedRam =+ options.keepHomeFreeRamGB
+      server.usedRam = + options.keepHomeFreeRamGB
     }
     server.freeRam = server.maxRam - server.usedRam
   }
@@ -62,9 +62,9 @@ function updateProcessList(script_servers, ns) {
 
 function getTargetServer(playerHackingLevel, ns) {
   let targetableServers = allServers(ns)
-    .map(casm => { return { name: casm, values: ns.getServer(casm), hackAnalyze: ns.hackAnalyze(casm), hackTime = ns.getHackTime(casm)} })
-    .filter(casmf => casmf.values.moneyMax > 0 && casmf.values.hasAdminRights && casmf.hackTime*4 < 100000 && casmf.values.requiredHackingSkill <= playerHackingLevel)
-  return targetableServers.sort((a, b) => (a.values.moneyMax * a.hackAnalyze / a.hackTime*4) - (b.values.moneyMax * b.hackAnalyze / b.hackTime*4)).shift()
+    .map(casm => { return { name: casm, values: ns.getServer(casm), hackAnalyze: ns.hackAnalyze(casm), hackTime = ns.getHackTime(casm) } })
+    .filter(casmf => casmf.values.moneyMax > 0 && casmf.values.hasAdminRights && casmf.hackTime * 4 < 100000 && casmf.values.requiredHackingSkill <= playerHackingLevel)
+  return targetableServers.sort((a, b) => (a.values.moneyMax * a.hackAnalyze / a.hackTime * 4) - (b.values.moneyMax * b.hackAnalyze / b.hackTime * 4)).shift()
 }
 
 function playerHackingLevel(ns) {
@@ -78,12 +78,9 @@ function removeEntry(entry, array) {
   }
 }
 
-function calculateSameFluffThreads(scriptServers, fluffy, ns){
-  for (var server of script_servers) {
-    var values = server.values
-    var processList = server.processList
-    
-  }
+function calculateThreads(script_servers, process, arg) {
+  return script_servers.filter(sf => sf.processList.filename == process && arg.indexOf(sf.processList.args) >= 0)
+    .reduce((a, b) => a.processList.threads + b.processList.threads, 0)
 }
 
 let [growFileName, weakenFileName, hackFileName] = ["ctrl/grow_server.script", "ctrl/weaken_server.script", "ctrl/hack_server.script"]
@@ -94,7 +91,8 @@ export async function main(ns) {
   let [fluffyWeaken, fluffyGrow, fluffyHack] = [0, 0, 0]
   let currentServer = ns.getHostname()
   let timing_array = allServers(ns)
-  while (true) {
+  let targetChanged = false
+  while (!targetChanged) {
     let oldServers = timing_array.map(tm => tm.name).filter(tf => !allServers(ns).find(af => tf == af))
     let newServers = allServers(ns).filter(af => !times.map(tm => tm.name).filter(tf => af == tf))
     newServers.map(nm => times.push({ name: nm }))
@@ -115,19 +113,35 @@ export async function main(ns) {
       updateRAM(scriptServers, ns)
       updateProcessList(scriptServers, ns)
 
-      let sumSecurity, growthMult, hackMoney
-      let neededHackThreads, neededWeakenThreads, neededGrowThreads // init vars
+      let sumSecurity, growthMult, hackMoney // init vars
+      let neededHackThreads, neededWeakenThreads, neededGrowThreads  // grow and weaken based on hack
       let missingHackThreads, missingWeakenThreads, missingGrowThreads
-      let runningHackThreads, runningWeakenThreads, runningGrowThreads
+      let runningHackThreads, runningWeakenThreads, runningGrowThreads  // with same fluf-arg
 
-      hackMoney = target.values.moneyAvailable * (options.hackPercent / target.hackAnalyze)
+      // calculate Hack threads
+      hackMoney = target.values.moneyMax / (options.hackPercent / target.hackAnalyze)
       neededHackThreads = Math.floor(ns.hackAnalyzeThreads(target.name, hackMoney))
-      growthMult = (target.values.moneyMax / (target.values.moneyAvailable - hackMoney))
+      runningHackThreads = calculateThreads(scriptServers, "/"+hackFileName, fluffyHack)
+      missingHackThreads = neededHackThreads - runningHackThreads
+      
+      // grow threads
+      growthMult = target.moneyMax / (target.moneyMax - hackMoney)
       neededGrowThreads = Math.ceil(ns.growthAnalyze(target.name, growthMult))
+      runningGrowThreads = calculateThreads(scriptServers, "/"+growFileName, fluffyGrow)
+      missingGrowThreads = neededGrowThreads - runningGrowThread
+      
+      // weaken threads
+      sumSecurity = ns.getServerSecurityLevel(target.name) + ns.hackAnalyzeSecurity(missingHackThreads) + ns.growthAnalyzeSecurity(missingGrowThreads)
+      if (sumSecurity > 100) { sumSecurity = 100 }
+      neededWeakenThreads = ( sumSecurity - target.minDifficulty ) / server.securityPerThread
+      runningWeakenThreads = calculateThreads(scriptServers, "/"+weakenFileName, fluffyWeaken)
+      missingWeakenThreads = neededWeakenThreads - runningWeakenThreads
+
       
     }
   }
 }
+main(ns)
 
 
 /* 
