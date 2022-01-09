@@ -7,7 +7,7 @@
 let argSchema = [
   ["hackPercent", 1], // Hack-Percentage in %
   ["growTo", 100], // Grow up to X %
-  ["keepHomeFreeRamGB", 8], // Ram in GB, that home will kept free
+  ["keepHomeFreeRamGB", 32], // Ram in GB, that home will kept free
   ["debug", false]
 ]
 export function autocomplete(data, args) {
@@ -17,14 +17,14 @@ export function autocomplete(data, args) {
 
 
 
-export async function distribute(ns, source, dest, fileName, script_servers) {
+async function distribute(ns, source, dest, fileName, script_servers) {
   await ns.wget(source, dest, fileName);
   for (let server of script_servers) {
     await ns.scp(fileName, dest, server.name)
   }
 }
 
-export function allServers(ns) {
+function allServers(ns) {
   const nodes = new Set
   function dfs(node) {
     nodes.add(node);
@@ -83,7 +83,14 @@ function calculateThreads(script_servers, process, arg) {
     .reduce((a, b) => a.processList.threads + b.processList.threads, 0)
 }
 
-let [growFileName, weakenFileName, hackFileName] = ["ctrl/grow_server.script", "ctrl/weaken_server.script", "ctrl/hack_server.script"]
+function threadSameArg(sserv, script, arg) {
+  if (sserv.length > 0) {
+    return sserv.filter(sf => sf.fileName == script).some(sfs => sfs.args.indexOf(arg))
+  }
+  else { return false }
+}
+
+let [growFileName, weakenFileName, hackFileName] = ["ctrl/batch_grow.js", "ctrl/batch_weaken.js", "ctrl/batch_hack.js"]
 
 export async function main(ns) {
 
@@ -103,9 +110,9 @@ export async function main(ns) {
       }
     }
     let scriptServers = [...script_servers(ns)]
-    await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/grow_server.script", currentServer, "/" + growFileName, script_servers(ns))
-    await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/weaken_server.script", currentServer, "/" + weakenFileName, script_servers(ns))
-    await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/H3draut3r%236722/weaken_grow_ctrl_scripts/hack_server.script", currentServer, "/" + hackFileName, script_servers(ns))
+    await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/ctrl_js/batch_grow.js", currentServer, "/" + growFileName, script_servers(ns))
+    await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/ctrl_js/batch_weaken.js", currentServer, "/" + weakenFileName, script_servers(ns))
+    await ctrl.distribute(ns, "https://raw.githubusercontent.com/Hedrauta/bitburner-scripts/master/ctrl_js/batch_hack.js", currentServer, "/" + hackFileName, script_servers(ns))
     for (server of scriptServers) {
       let timetabe = timing_array.filter(taf => taf.name == server.name)
       let target = getTargetServer(playerHackingLevel, ns)
@@ -123,12 +130,14 @@ export async function main(ns) {
       neededHackThreads = Math.floor(ns.hackAnalyzeThreads(target.name, hackMoney))
       runningHackThreads = calculateThreads(scriptServers, "/"+hackFileName, fluffyHack)
       missingHackThreads = neededHackThreads - runningHackThreads
-      
+      hackScriptRunOnServer = threadSameArg(server.processList, "/"+hackFileName, fluffyHack)
+
       // grow threads
       growthMult = target.moneyMax / (target.moneyMax - hackMoney)
       neededGrowThreads = Math.ceil(ns.growthAnalyze(target.name, growthMult))
       runningGrowThreads = calculateThreads(scriptServers, "/"+growFileName, fluffyGrow)
       missingGrowThreads = neededGrowThreads - runningGrowThread
+      growScriptRunOnServer = threadSameArg(server.processList, "/"+growFileName, fluffyGrow)
       
       // weaken threads
       sumSecurity = ns.getServerSecurityLevel(target.name) + ns.hackAnalyzeSecurity(missingHackThreads) + ns.growthAnalyzeSecurity(missingGrowThreads)
@@ -136,8 +145,11 @@ export async function main(ns) {
       neededWeakenThreads = ( sumSecurity - target.minDifficulty ) / server.securityPerThread
       runningWeakenThreads = calculateThreads(scriptServers, "/"+weakenFileName, fluffyWeaken)
       missingWeakenThreads = neededWeakenThreads - runningWeakenThreads
-
+      weakenScriptRunOnServer = threadSameArg(server.processList, "/"+weakenFileName, fluffyWeaken)
       
+      
+      if (!hackScriptRunOnServer) {}
+
     }
   }
 }
@@ -147,11 +159,9 @@ main(ns)
 /* 
 
 Grow > weaken until max/min
->
+> 
 timing, hack > grow right after hack
 timing grow (hack) > weaken right after grow 
 end of hack + 50 ms = end of weaken
-
-
 
 */
