@@ -3,7 +3,7 @@
 let argsSchema = [ // options to add as a flag (--hack % , --useHome, --use_all_purchased , --useNonOwned , --ignore (special ussage) )
   ['hack', 95], // hack-percentage of targets server money, run with argument "--hack *integer*" (>=1 && <=100)
   ['ignore', []], // ingnored script servers, add for every purchased server "--ignore *hostname*" on run's argument
-  ['useHome', true], // include home-server as a script-server
+  ['useHome', false], // include home-server as a script-server
   ['useNonOwned', true], // use non-owned, rooted server as script-server, to enable, run with "--useNonOwned"
   ['usePurchased', true], // use of all purchased server (except ignored ones), to enable, run with "--use_all_purchased"
   // this will ignore --include
@@ -41,8 +41,9 @@ export async function main(ns) {
 
   function upd_ussrvr(ns) { // special function for special use
     let use_servers = []
-    for (var i = 0; i < ns.hacknet.numNodes(); i++) {
-      use_servers.push("hacknet-node-"+i)
+    
+		for (var i = 0; i < ns.hacknet.numNodes(); i++) {
+      use_servers.push("hacknet-server-"+i)
     }
     if (arg.usePurchased || arg.useAll) {
       //   if true, use every purchased server (except home ofc)
@@ -124,7 +125,7 @@ export async function main(ns) {
 
   // another filter, non-owned, with ram >= 2, for use in useNonOwned
   function nors(ns) {
-    return nos(ns).filter(nf => ns.getServerMaxRam(nf) >= 2)
+    return nos(ns).filter(nf => ns.getServerMaxRam(nf) >= 2 && ns.getServerMaxMoney(nf) > 0)
   }
 
   // calculate  process_lists used threads for specific script and arguments, return it for further calculation
